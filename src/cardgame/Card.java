@@ -12,4 +12,14 @@ package cardgame;
  */
 public class Card {
     
+    final private int cardValue;
+    
+    Card(int cardValue) {
+        this.cardValue = cardValue;
+    }
+
+    int getValue() {
+        return cardValue;
+    }
+    
 }
