@@ -52,7 +52,9 @@ public class CardDeck {
             throw new StackOverflowException("Card deck is full. You cannot add more cards.");
         }
     }
-
+    synchronized int getSize() {
+        return this.top;
+    }
     
     synchronized boolean isEmpty() {
         return (this.top == 0);

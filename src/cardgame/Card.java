@@ -21,5 +21,9 @@ public class Card {
     int getValue() {
         return cardValue;
     }
+
+    boolean equals(Card otherCard) {
+    	return (this.cardValue == otherCard.getValue());
+    }
     
 }
