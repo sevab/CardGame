@@ -20,6 +20,7 @@ public class CardGame extends Thread implements CardGameListener {
 	private final Player[] players;
 	private final CardDeck[] cardDecks;
 	private CardDeck initialDeck;
+	private boolean gameOver = false; // volatile?
 
     CardGame(int numberOfPlayers, int numberOfCards, CardDeck initialDeck) {
         validateDeck(initialDeck, numberOfPlayers, numberOfCards);
@@ -33,7 +34,7 @@ public class CardGame extends Thread implements CardGameListener {
 	public void run() {
         // init players & decks
         for (int i=0; i < this.numberOfPlayers; i++) {
-        	this.players[i] = new Player(this, i, this.numberOfCards);
+        	this.players[i] = new Player(this, i+1, this.numberOfCards);
         	cardDecks[i] = new CardDeck(this.numberOfCards);
         }
 
@@ -49,20 +50,24 @@ public class CardGame extends Thread implements CardGameListener {
         }
 
 
-    	for (Player player : this.players) {
+    	for (Player player : this.players)
     		player.start();
-
-        }
     }
 
 
 
-    public void playerWonEventHandler(PlayerWonEvent event) {
-		Object winningPlayer = event.getSource();
-		if (winningPlayer instanceof Player)
-	        System.out.println("Game won by Player " + ((Player) winningPlayer).getPlayerIndex() );
-         // let everyone else know the player won
-         // make sure all subsequent PlayerWonEvents aren't accepted or do change the state of the game
+    public synchronized void playerWonEventHandler(PlayerWonEvent event) {
+		// make sure all subsequent PlayerWonEvents aren't accepted or do change the state of the game
+		if (!gameOver) {
+			Object winningPlayer = event.getSource();
+			if (winningPlayer instanceof Player) {
+				this.gameOver = true; // record winner?
+		        System.out.println("Game won by Player " + ((Player) winningPlayer).getPlayerIndex() );
+			    System.out.println("Game Over!");
+			}
+		    for (Player player : this.players)
+		    	player.gameOverEventHandler( new GameOverEvent(this) );
+		}
     }
 
 

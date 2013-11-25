@@ -8,12 +8,13 @@ package cardgame;
  *
  * @author xxx
  */
-public class Player extends Thread {
+public class Player extends Thread implements PlayerListener {
 
     private Card[] cardsArray;
     private int top;
     private int playerIndex;
     private CardGame cardGame;
+    private boolean gameOver = false; // volatile?
     
     // FIXME: volatile? Yes or No
     Player(CardGame cardGame, int playerIndex, int handSize) {
@@ -25,18 +26,27 @@ public class Player extends Thread {
 
     public void run() {
         // make sure initialised properly (e.g. have all cards)?
-        if (hasWinningCombo()) {
-            firePlayerWonEvent( new PlayerWonEvent(this) );
+        while (!gameOver) {
+            if (hasWinningCombo())
+                firePlayerWonEvent( new PlayerWonEvent(this) );
         }
+        
     }
 
 
     void firePlayerWonEvent(PlayerWonEvent event) {
+        // check if gameOver or fire anyway and maybe be the first or get ignored if gameover? yeah, probably no need to check
         System.out.println("Player " + this.getPlayerIndex() + " has fired event");
         this.cardGame.playerWonEventHandler(event);
     }
 
-
+    public void gameOverEventHandler(GameOverEvent event) {
+        // verify the source is the same as this.cardGame? But who else...
+        // Object source = event.getSource(); if (source instanceof CardGame)
+        this.gameOver = true;
+        System.out.println("Player " + this.playerIndex + " is leaving the game");
+        // print out this.cardsArray
+    }
 
 
     synchronized void push(Card newCard) throws StackOverflowException {
