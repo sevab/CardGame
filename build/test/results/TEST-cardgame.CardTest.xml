@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite errors="0" failures="0" hostname="Sevas-MacBook-Air.local" name="cardgame.CardTest" tests="1" time="0.086" timestamp="2013-11-25T14:05:52">
+<testsuite errors="0" failures="0" hostname="Sevas-MacBook-Air.local" name="cardgame.CardTest" tests="1" time="0.083" timestamp="2013-11-26T15:22:18">
   <properties>
     <property name="default.javac.source" value="1.7" />
     <property name="file.encoding.pkg" value="sun.io" />
@@ -75,7 +75,7 @@
     <property name="libs.JAXB-ENDORSED.src" value="" />
     <property name="libs.hibernate-persistence.javadoc" value="" />
     <property name="libs.ejb3-persistence.classpath" value="/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/java/modules/ext/hibernate/hibernate-jpa-2.0-api-1.0.1.Final.jar" />
-    <property name="sun.java.command" value="org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner cardgame.CardTest filtertrace=true haltOnError=false haltOnFailure=false showoutput=true outputtoformatters=true logfailedtests=true logtestlistenerevents=false formatter=org.apache.tools.ant.taskdefs.optional.junit.BriefJUnitResultFormatter formatter=org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter,/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/test/results/TEST-cardgame.CardTest.xml crashfile=/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/junitvmwatcher1643192303879033592.properties propsfile=/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/junit2777203805076173858.properties" />
+    <property name="sun.java.command" value="org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner cardgame.CardTest filtertrace=true haltOnError=false haltOnFailure=false showoutput=true outputtoformatters=true logfailedtests=true logtestlistenerevents=false formatter=org.apache.tools.ant.taskdefs.optional.junit.BriefJUnitResultFormatter formatter=org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter,/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/test/results/TEST-cardgame.CardTest.xml crashfile=/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/junitvmwatcher8408480173365945255.properties propsfile=/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/junit7180904757932782224.properties" />
     <property name="built-jar.properties" value="/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/built-jar.properties" />
     <property name="libs.junit.src" value="" />
     <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16" />

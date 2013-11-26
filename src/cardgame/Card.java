@@ -25,5 +25,9 @@ public class Card {
     boolean equals(Card otherCard) {
     	return (this.cardValue == otherCard.getValue());
     }
+    // TODO: test?
+    Card getCopy() {
+        return new Card(this.cardValue);
+    }
     
 }

@@ -36,7 +36,7 @@ public class CardDeck {
             throw new StackUnderflowException("Card deck is empty. Cannot draw cards from the deck.");
         }
         this.top--;
-        Card temp = this.cardsArray[this.top];
+        Card temp = this.cardsArray[this.top].getCopy();
         this.cardsArray[this.top] = null;
         return temp;
     }
@@ -44,9 +44,9 @@ public class CardDeck {
 	// TODO: maybe will need to add newCard.getCopy() due to concurrency & immutability issues
     synchronized void unshift(Card newCard) throws StackOverflowException {
     	if (this.top < this.cardsArray.length) {
-    		for (int i = this.top; i<0; i--)
+    		for (int i = this.top-1; 0 <= i; i--)
     			this.cardsArray[i+1] = this.cardsArray[i];
-    		this.cardsArray[0] = newCard;
+    		this.cardsArray[0] = newCard.getCopy();
             this.top++;
     	}  else {
             throw new StackOverflowException("Card deck is full. You cannot add more cards.");
