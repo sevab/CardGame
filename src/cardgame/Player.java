@@ -48,17 +48,16 @@ public class Player extends Thread implements PlayerListener {
             this.discardDeck.unshift(discardACard());
             if (hasWinningCombo())
                 firePlayerWonEvent( new PlayerWonEvent(this) );
-        }
-        
+        }   
     }
 
     Card discardACard() {
         Card cardToDiscard = null;
         if (this.strategy == 1) {
             // pop an unpreffered card in a FIFO order:
-            // FIXME: what if all cards are preffered? Then pop the last card.
             for (int i=0; i < this.top; i++) {
-                if (this.cardsArray[i].getValue() != this.playerIndex) {
+                // if card is not preffered or it is not last (in which case we don't care the card's value since we'll need to get rid of one card anyways)
+                if ((this.cardsArray[i].getValue() != this.playerIndex) || (i == this.top)) {
                     cardToDiscard = delete_at(i);
                     break;
                 }
@@ -97,6 +96,7 @@ public class Player extends Thread implements PlayerListener {
     }
 
     synchronized Card delete_at(int index) {
+        // TODO: test scenario deleting the last item?
         // if (this.isEmpty())
         //     throw new StackUnderflowException();
         if (this.cardsArray[index] == null)

@@ -23,6 +23,7 @@ public class CardGame extends Thread implements CardGameListener {
 	private boolean gameOver = false; // volatile?
 
     CardGame(int numberOfPlayers, int numberOfCards, CardDeck initialDeck) {
+    	//FEATURE: validate deck if it's possible to win with that deck given player num? (e.g. 1 player && num of preffered cards < k)
         validateDeck(initialDeck, numberOfPlayers, numberOfCards);
         this.initialDeck = initialDeck;
         this.numberOfPlayers = numberOfPlayers;
@@ -98,10 +99,10 @@ public class CardGame extends Thread implements CardGameListener {
 
 	// public static void main(String[] args) {
  //        System.out.println("Game 1:");
- //        CardDeck testCardDeck = new CardDeck(4);
- //        for (int i=0; i<4; i++)
+ //        CardDeck testCardDeck = new CardDeck(18);
+ //        for (int i=0; i<18; i++)
  //            testCardDeck.push(new Card(3));
- //        CardGame testGame = new CardGame(1, 2, testCardDeck);
+ //        CardGame testGame = new CardGame(3, 3, testCardDeck);
  //        testGame.start();
  //        try {
  //            Thread.sleep(10);

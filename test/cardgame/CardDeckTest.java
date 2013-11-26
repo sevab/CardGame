@@ -31,22 +31,50 @@ public class CardDeckTest {
 
     
      @Test
-     public void should_push_and_pop_cards() {
-         CardDeck testCardDeck = new CardDeck(3);
-         Card testCard = new Card(3);
-         testCardDeck.push(testCard);
-         Assert.assertEquals(3, testCardDeck.pop().getValue());
+     public void should_push_cards_and_throw_stack_overflow_exception() {
+        CardDeck testCardDeck = new CardDeck(3);
+        Assert.assertEquals(0, testCardDeck.getSize());
+        for (int i=0; i<3; i++) {
+            testCardDeck.push(new Card(i));
+            Assert.assertEquals(i+1, testCardDeck.getSize());
+        }
+        try {
+            testCardDeck.push(new Card(3));
+            fail( "Missing exception" );
+        } catch (StackOverflowException e){
+            assertTrue(e.getMessage().equals("Card deck is full. You cannot add more cards."));
+        }
      }
+     @Test
+     public void should_pop_cards_and_throw_stack_underflow_exception() {
+        CardDeck testCardDeck = new CardDeck(3);
+        for (int i=0; i<3; i++)
+            testCardDeck.push(new Card(i));
+        for (int i=2; i > 0; i--) {
+            Assert.assertEquals(i, testCardDeck.pop().getValue());
+            Assert.assertEquals(i, testCardDeck.getSize());
+        }
+
+     }
+
     // FIXME: RETEST. Shitty test. Make sure top is same after unshift && length is ++
     @Test
     public void should_unshift_cards() {
         CardDeck testCardDeck = new CardDeck(3);
-        Card testCardOne = new Card(3);
-        Card testCardTwo = new Card(4);
-        testCardDeck.push(testCardOne);
-        testCardDeck.unshift(testCardTwo);
-        testCardDeck.pop();
-        Assert.assertEquals(4, testCardDeck.pop().getValue());
+        for (int i=0; i<3; i++) {
+            testCardDeck.unshift(new Card(i));
+            Assert.assertEquals(i+1, testCardDeck.getSize());
+        }
+        try {
+            testCardDeck.push(new Card(3));
+            fail( "Missing exception" );
+        } catch (StackOverflowException e){
+            assertTrue(e.getMessage().equals("Card deck is full. You cannot add more cards."));
+        }
+        for (int i=0; i<3; i++) {
+           Assert.assertEquals(i, testCardDeck.pop().getValue());
+           Assert.assertEquals((2-i), testCardDeck.getSize());
+        }
     }
     @Test
     public void should_throw_stackOverflowException_when_pushing_and_unshifting_a_card_into_a_full_deck() {
@@ -55,27 +83,10 @@ public class CardDeckTest {
         Card testCardTwo = new Card(4);
         testCardDeck.push(testCardOne);
         try {
-            testCardDeck.push(testCardTwo);
-            fail( "Missing exception" );
-        } catch (StackOverflowException e){
-            assertTrue(e.getMessage().equals("Card deck is full. You cannot add more cards."));
-        }
-        try {
             testCardDeck.unshift(testCardTwo);
             fail( "Missing exception" );
         } catch (StackOverflowException e){
             assertTrue(e.getMessage().equals("Card deck is full. You cannot add more cards."));
-        }
-    }
-
-    @Test
-    public void should_throw_stackUnderflowException_when_poping_from_an_empty_array() {
-        CardDeck testCardDeck = new CardDeck(1);
-        try {
-            testCardDeck.pop();
-            fail( "Missing exception" );
-        } catch (StackUnderflowException e){
-            assertTrue(e.getMessage().equals("Card deck is empty. Cannot draw cards from the deck."));
         }
     }
 }

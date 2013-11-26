@@ -21,10 +21,10 @@ public class CardDeck {
          this.top = 0;
     }
     
-    // TODO: maybe will need to add newCard.getCopy() due to concurrency & immutability issues
+    // storing the copy of newCard, since the object may be collected later on by garbage collector
     synchronized void push(Card newCard) throws StackOverflowException {
         if (this.top < this.cardsArray.length) {
-            this.cardsArray[this.top] = newCard;
+            this.cardsArray[this.top] = newCard.getCopy();
             this.top++;
         } else {
             throw new StackOverflowException("Card deck is full. You cannot add more cards.");
