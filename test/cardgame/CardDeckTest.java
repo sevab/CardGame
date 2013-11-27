@@ -50,23 +50,29 @@ public class CardDeckTest {
         CardDeck testCardDeck = new CardDeck(3);
         for (int i=0; i<3; i++)
             testCardDeck.push(new Card(i));
-        for (int i=2; i > 0; i--) {
+        for (int i=2; i >= 0; i--) {
             Assert.assertEquals(i, testCardDeck.pop().getValue());
             Assert.assertEquals(i, testCardDeck.getSize());
         }
-
+        try {
+            testCardDeck.pop();
+            fail( "Missing exception" );
+        } catch (StackUnderflowException e){
+            assertTrue(e.getMessage().equals("Card deck is empty. Cannot draw cards from the deck."));
+        }
+        // Card deck is empty. Cannot draw cards from the deck.
      }
 
     // FIXME: RETEST. Shitty test. Make sure top is same after unshift && length is ++
     @Test
-    public void should_unshift_cards() {
+    public void should_unshift_cards_and_throw_stack_overflow_exception() {
         CardDeck testCardDeck = new CardDeck(3);
         for (int i=0; i<3; i++) {
             testCardDeck.unshift(new Card(i));
             Assert.assertEquals(i+1, testCardDeck.getSize());
         }
         try {
-            testCardDeck.push(new Card(3));
+            testCardDeck.unshift(new Card(3));
             fail( "Missing exception" );
         } catch (StackOverflowException e){
             assertTrue(e.getMessage().equals("Card deck is full. You cannot add more cards."));
@@ -74,19 +80,6 @@ public class CardDeckTest {
         for (int i=0; i<3; i++) {
            Assert.assertEquals(i, testCardDeck.pop().getValue());
            Assert.assertEquals((2-i), testCardDeck.getSize());
-        }
-    }
-    @Test
-    public void should_throw_stackOverflowException_when_pushing_and_unshifting_a_card_into_a_full_deck() {
-        CardDeck testCardDeck = new CardDeck(1);
-        Card testCardOne = new Card(3);
-        Card testCardTwo = new Card(4);
-        testCardDeck.push(testCardOne);
-        try {
-            testCardDeck.unshift(testCardTwo);
-            fail( "Missing exception" );
-        } catch (StackOverflowException e){
-            assertTrue(e.getMessage().equals("Card deck is full. You cannot add more cards."));
         }
     }
 }

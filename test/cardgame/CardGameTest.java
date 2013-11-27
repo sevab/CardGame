@@ -74,13 +74,6 @@ public class CardGameTest {
     // }
     // @Test Game
     // public void should_end_at_some_point_when_given_enough_equal_cards_for_someone_to_win
-    // @Test Player
-    // public void should_wait_when_a_deck_is_empty
-
-    // @Test Player
-    // public void should_be_able_to_draw_and_discards_cards
-    // test delete_at() method
-    // @Test deadlock situation where the only player went through the whole array and didn't find anything?
-    // @Test Players DELETED_AT()!!!
+    
 
 }
