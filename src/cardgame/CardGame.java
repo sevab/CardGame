@@ -7,7 +7,10 @@
 package cardgame;
 
 import java.util.EventListener;
-
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 /**
  *
@@ -91,12 +94,6 @@ public class CardGame extends Thread implements CardGameListener {
 		}
     }
 
-
-
-
-
-
-
     void validateDeck(CardDeck deck, int numberOfPlayers, int handSize) {
     	if ( deck.getSize() < 2 * numberOfPlayers * handSize)
     		throw new RuntimeException("Insufficient number of cards in the initial deck. Please, import a larger deck");
@@ -110,21 +107,73 @@ public class CardGame extends Thread implements CardGameListener {
         throw new RuntimeException("No winner yet - The game hasn't ended yet.");
     }
 
-	// public static void main(String[] args) {
- //        System.out.println("Game 1:");
- //        CardDeck testCardDeck = new CardDeck(18);
- //        for (int i=0; i<18; i++)
- //            testCardDeck.push(new Card(3));
- //        CardGame testGame = new CardGame(3, 3, testCardDeck);
- //        testGame.start();
- //        try {
- //            Thread.sleep(10);
- //        } catch (InterruptedException e) {}
-	// }
 
 
-    // Player getWinner() {
-    //     throw new UnsupportedOperationException("Not supported yet.");
-    // }
-    
+
+
+
+
+
+
+
+	public static void main(String[] args) {
+        if (args.length < 2) {
+            System.err.println("\n Usage Error: CardGame number_of_players number_of_cards_per_player\n");
+            System.exit(1);
+        }
+
+        // initialize to something, otherwise compiler complains
+        int numberOfPlayers = -1;
+        int handSize = -1;
+        // Validate args are ints
+        try {
+            numberOfPlayers = Integer.parseInt(args[0]);
+            handSize = Integer.parseInt(args[1]);
+        } catch (NumberFormatException e) {
+            System.err.println("\nUsage Error: CardGame number_of_players number_of_cards_per_player"); 
+            System.err.println("       Arguements number_of_players and number_of_cards_per_player must be integers larger than 0\n");
+            System.exit(1);
+        }
+        // Validate args are larger than 1
+        if (numberOfPlayers < 1 || handSize < 1) {
+            System.err.println("\nUsage Error: CardGame number_of_players number_of_cards_per_player"); 
+            System.err.println("       Arguements number_of_players and number_of_cards_per_player must be integers larger than 0\n");
+            System.exit(1);
+        }
+
+        // Get & validate file
+        String fileName = null;
+        File f = new File("fake/path");
+        while (!f.exists()) {        
+            System.out.print("Please enter the path to the card deck: ");
+            try {
+                fileName = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+                f = new File(fileName);
+                if(!f.exists()) {
+                    System.out.println("It doesn't look like this file exists..");
+                }
+            } catch (IOException e) {
+                System.out.println("Oops..somethign went wrong.");
+                System.exit(1);
+            }
+        }
+        // Once file received
+        System.out.println("We're loading the file in...");
+        System.out.println("File: " + fileName);
+        System.out.println("Number of Players: " + numberOfPlayers + ", Hand Size: " + handSize);
+        // /Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/test/cardgame/testDeck.txt
+        // CardDeck initialDeck = new CardDeck[linesInAFile]
+
+
+
+        // System.out.println("Game 1:");
+        // CardDeck testCardDeck = new CardDeck(18);
+        // for (int i=0; i<18; i++)
+        //     testCardDeck.push(new Card(3));
+        // CardGame testGame = new CardGame(3, 3, testCardDeck);
+        // testGame.start();
+        // try {
+        //     Thread.sleep(10);
+        // } catch (InterruptedException e) {}
+	}
 }
