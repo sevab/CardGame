@@ -172,21 +172,18 @@ public class CardGame extends Thread implements CardGameListener {
         }
         scanner.close();
 
+        // create game_output directory
+        File output_dir = new File("game_output");
+        output_dir.mkdir();
+        // delete any files in game_output directory
+        for(File file: output_dir.listFiles()) file.delete();
+
+
         System.out.println("Starting the game...");
         System.out.println("Press p to pause, press r to resume");
         new CardGame(numberOfPlayers, handSize, initialDeck).start();
 
 
-        // try {
-        //     user_command = (new BufferedReader(new InputStreamReader(System.in))).readLine();
-        //     f = new File(fileName);
-        //     if(!f.exists()) {
-        //         System.out.println("It doesn't look like this file exists..");
-        //     }
-        // } catch (IOException e) {
-        //     System.out.println("Oops..somethign went wrong.");
-        //     System.exit(1);
-        // }
 
         // /Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/test/cardgame/testDeck.txt
         // /Users/sevabaskin/Dropbox/2nd\ Year/Java/CW2/CardGame/test/cardgame/testDeck.txt
@@ -199,7 +196,7 @@ public class CardGame extends Thread implements CardGameListener {
 
         // GAME EXITING:
         // on game's end: wait for players to notify they've left the game
-        // print out decks
+        // write down & print out decks
         // System.exit(1)
         // find way to bypass user input waiting
         // interrupt the thread waiting for the user input

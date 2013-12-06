@@ -4,6 +4,10 @@
 //       Though the players will terminate before the game's end, so maybe no need?
 package cardgame;
 
+import java.io.File;
+import java.io.IOException;
+
+
 /**
  *
  * @author xxx
@@ -18,6 +22,7 @@ public class Player extends Thread implements PlayerListener {
     private CardDeck discardDeck;
     private CardDeck drawDeck;
     private int strategy;
+    private File output_file;
     
     // FIXME: volatile? Yes or No
     Player(CardGame cardGame, int playerIndex, int handSize, int strategy, CardDeck drawDeck, CardDeck discardDeck) {
@@ -28,11 +33,15 @@ public class Player extends Thread implements PlayerListener {
         this.discardDeck = discardDeck;
         this.drawDeck = drawDeck;
         this.strategy = strategy;
+        this.output_file = new File("game_output/player" + playerIndex + "_output.txt");
     }
 
     public void run() {
         System.out.println("Player " + this.playerIndex + " has joined the game");
-        System.out.println("player " + this.playerIndex + " initial hand is " + getHandAsString());
+        try {
+            logAction("Player " + this.playerIndex + " has joined the game");
+            logAction("player " + this.playerIndex + " initial hand is " + getHandAsString());
+        } catch (IOException e) {}
         // make sure initialised properly (e.g. have all cards)?
         // DRY TODO: extract into verifyIfWon() method
         if (hasWinningCombo()) { // set game over to false? but still wait to get the command from the game
@@ -43,7 +52,9 @@ public class Player extends Thread implements PlayerListener {
             while(!isFull()) {
                 try {
                     push(this.drawDeck.pop()); // acquires a lock on drawDeck
-                    System.out.println("player " + this.playerIndex + " draws a " + top().getValue() + " from deck " + this.drawDeck.getDeckIndex());
+                    try {
+                        logAction("player " + this.playerIndex + " draws a " + top().getValue() + " from deck " + this.drawDeck.getDeckIndex());    
+                    } catch (IOException e) {}
                 } catch (StackUnderflowException e) { // wait if draw stack is empty:
                     try {
                         sleep(1);
@@ -52,13 +63,15 @@ public class Player extends Thread implements PlayerListener {
             }
             Card discardedCard = discardACard();
             this.discardDeck.unshift(discardedCard); // acquire a lock on discardDeck
-            System.out.println("player " + this.playerIndex + " discards a " + discardedCard.getValue() + " to deck " + this.discardDeck.getDeckIndex());
-            System.out.println("player " + this.playerIndex + " current hand is " + getHandAsString());
+            try {
+                logAction("player " + this.playerIndex + " discards a " + discardedCard.getValue() + " to deck " + this.discardDeck.getDeckIndex());
+                logAction("player " + this.playerIndex + " current hand is " + getHandAsString());
+            } catch (IOException e) {}
             if (hasWinningCombo()) {
                 firePlayerWonEvent( new PlayerWonEvent(this) );
                 this.gameOver = true; // don't wait for GameOverEvent, shut down immediately and stop bombarding CardGame with winning events
             }
-        }   
+        }
     }
 
     Card discardACard() {
@@ -82,7 +95,7 @@ public class Player extends Thread implements PlayerListener {
 
     void firePlayerWonEvent(PlayerWonEvent event) {
         // check if gameOver or fire anyway and maybe be the first or get ignored if gameover? yeah, probably no need to check
-        System.out.println("Player " + this.getPlayerIndex() + " has fired event");
+        System.out.println("Player " + this.getPlayerIndex() + " has fired PlayerWonEvent event");
         this.cardGame.playerWonEventHandler(event);
     }
 
@@ -90,8 +103,11 @@ public class Player extends Thread implements PlayerListener {
         // verify the source is the same as this.cardGame? But who else...
         // Object source = event.getSource(); if (source instanceof CardGame)
         this.gameOver = true;
-        System.out.println("player " + this.playerIndex + " final hand is " + getHandAsString());
-        System.out.println("player " + this.playerIndex + " exits");
+        // move code below after the while(!gameOver) loop
+        try {
+            logAction("player " + this.playerIndex + " final hand is " + getHandAsString());
+            logAction("player " + this.playerIndex + " exits");
+        } catch(IOException e) {}
         // print out this.cardsArray
     }
 
@@ -166,5 +182,9 @@ public class Player extends Thread implements PlayerListener {
             hand = hand + " " + this.cardsArray[i].getValue();
         }
         return hand;
+    }
+    synchronized void logAction(String action) throws IOException {
+        System.out.println(action);
+        Helper.appendLineToFile( output_file, action);
     }
 }
