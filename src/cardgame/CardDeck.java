@@ -14,9 +14,11 @@ public class CardDeck {
 
     private Card[] cardsArray;
     private int top;
+    private int deckIndex;
     
     // FIXME: volatile? Yes or No
-    CardDeck(int sizeOfCardDeck) {
+    CardDeck(int deckIndex, int sizeOfCardDeck) {
+         this.deckIndex = deckIndex;
          this.cardsArray = new Card[sizeOfCardDeck];   
          this.top = 0;
     }
@@ -58,5 +60,13 @@ public class CardDeck {
     
     synchronized boolean isEmpty() {
         return (this.top == 0);
+    }
+    synchronized int getDeckIndex() {
+        return this.deckIndex;
+    }
+    synchronized Card top() throws StackUnderflowException {
+        if (this.isEmpty())
+            throw new StackUnderflowException();
+        return this.cardsArray[this.top - 1].getCopy();
     }
 }

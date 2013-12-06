@@ -32,7 +32,8 @@ public class CardDeckTest {
     
      @Test
      public void should_push_cards_and_throw_stack_overflow_exception() {
-        CardDeck testCardDeck = new CardDeck(3);
+        int cardDeckIndex = 1;
+        CardDeck testCardDeck = new CardDeck(cardDeckIndex, 3);
         Assert.assertEquals(0, testCardDeck.getSize());
         for (int i=0; i<3; i++) {
             testCardDeck.push(new Card(i));
@@ -47,7 +48,8 @@ public class CardDeckTest {
      }
      @Test
      public void should_pop_cards_and_throw_stack_underflow_exception() {
-        CardDeck testCardDeck = new CardDeck(3);
+        int cardDeckIndex = 1;
+        CardDeck testCardDeck = new CardDeck(cardDeckIndex, 3);
         for (int i=0; i<3; i++)
             testCardDeck.push(new Card(i));
         for (int i=2; i >= 0; i--) {
@@ -66,7 +68,8 @@ public class CardDeckTest {
     // FIXME: RETEST. Shitty test. Make sure top is same after unshift && length is ++
     @Test
     public void should_unshift_cards_and_throw_stack_overflow_exception() {
-        CardDeck testCardDeck = new CardDeck(3);
+        int cardDeckIndex = 1;
+        CardDeck testCardDeck = new CardDeck(cardDeckIndex, 3);
         for (int i=0; i<3; i++) {
             testCardDeck.unshift(new Card(i));
             Assert.assertEquals(i+1, testCardDeck.getSize());

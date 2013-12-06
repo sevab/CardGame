@@ -1,16 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package cardgame;
 
 import java.util.EventListener;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Scanner;
 
 /**
  *
@@ -46,7 +42,7 @@ public class CardGame extends Thread implements CardGameListener {
         for (int i=0; i < this.numberOfPlayers; i++) {
         	// each deck should be able to hold at least twice the number of cards
         	// research if can minimize this furhter
-        	cardDecks[i] = new CardDeck(this.handSize*2);
+        	cardDecks[i] = new CardDeck(i+1, this.handSize*2);
         }
         for (int i=0; i < this.numberOfPlayers; i++) {
             // maybe a better way to register the game would be through the player.addGame(CardGame game) method, rather than passing directly? Same with decks? More readable.
@@ -56,8 +52,7 @@ public class CardGame extends Thread implements CardGameListener {
         	this.players[i] = new Player(this, i+1, this.handSize+1, 1, cardDecks[i], cardDecks[(i+this.numberOfPlayers-1)%this.numberOfPlayers]);
         }
 
-
-
+        System.out.println("Distributing cards...");
         // distribute cards among players
         for (int i=0; i < this.handSize; i++) {
         	for (int j=0; j < this.numberOfPlayers; j++) {
@@ -71,7 +66,7 @@ public class CardGame extends Thread implements CardGameListener {
         	}
         }
 
-
+        System.out.println("Starting players...");
     	for (Player player : this.players)
     		player.start();
     }
@@ -115,8 +110,8 @@ public class CardGame extends Thread implements CardGameListener {
 
 
 
-
-	public static void main(String[] args) {
+    // throws?
+	public static void main(String[] args)  throws FileNotFoundException, IOException {
         if (args.length < 2) {
             System.err.println("\n Usage Error: CardGame number_of_players number_of_cards_per_player\n");
             System.exit(1);
@@ -161,8 +156,55 @@ public class CardGame extends Thread implements CardGameListener {
         System.out.println("We're loading the file in...");
         System.out.println("File: " + fileName);
         System.out.println("Number of Players: " + numberOfPlayers + ", Hand Size: " + handSize);
+        
+        // CardDeck initialDeck = new CardDeck[Helper.linesInAFile(f)];
+        int linesInAFile = Helper.linesInAFile(f);
+        System.out.println("lines in a file: " + linesInAFile);
+
+
+        Scanner scanner = new Scanner(f);
+        CardDeck initialDeck = new CardDeck(0, linesInAFile);
+        int [] tall = new int [100];
+        while(scanner.hasNextInt()){
+           initialDeck.push(new Card(scanner.nextInt()));
+
+           // System.out.println("initial deck top: " + initialDeck.top().getValue());
+        }
+        scanner.close();
+
+        System.out.println("Starting the game...");
+        System.out.println("Press p to pause, press r to resume");
+        new CardGame(numberOfPlayers, handSize, initialDeck).start();
+
+
+        // try {
+        //     user_command = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+        //     f = new File(fileName);
+        //     if(!f.exists()) {
+        //         System.out.println("It doesn't look like this file exists..");
+        //     }
+        // } catch (IOException e) {
+        //     System.out.println("Oops..somethign went wrong.");
+        //     System.exit(1);
+        // }
+
         // /Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/test/cardgame/testDeck.txt
+        // /Users/sevabaskin/Dropbox/2nd\ Year/Java/CW2/CardGame/test/cardgame/testDeck.txt
         // CardDeck initialDeck = new CardDeck[linesInAFile]
+
+        // NEXT:
+        // Pause and Resume feature
+        // put players into pause state (either exit or wait, doesn't matter) by sending gamePaused event
+        // resume
+
+        // GAME EXITING:
+        // on game's end: wait for players to notify they've left the game
+        // print out decks
+        // System.exit(1)
+        // find way to bypass user input waiting
+        // interrupt the thread waiting for the user input
+
+        // Implement printing and reading
 
 
 

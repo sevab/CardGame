@@ -31,6 +31,8 @@ public class Player extends Thread implements PlayerListener {
     }
 
     public void run() {
+        System.out.println("Player " + this.playerIndex + " has joined the game");
+        System.out.println("player " + this.playerIndex + " initial hand is " + getHandAsString());
         // make sure initialised properly (e.g. have all cards)?
         // DRY TODO: extract into verifyIfWon() method
         if (hasWinningCombo()) { // set game over to false? but still wait to get the command from the game
@@ -41,13 +43,17 @@ public class Player extends Thread implements PlayerListener {
             while(!isFull()) {
                 try {
                     push(this.drawDeck.pop()); // acquires a lock on drawDeck
+                    System.out.println("player " + this.playerIndex + " draws a " + top().getValue() + " from deck " + this.drawDeck.getDeckIndex());
                 } catch (StackUnderflowException e) { // wait if draw stack is empty:
                     try {
                         sleep(1);
                     } catch (InterruptedException ex) {  }
                 }
             }
-            this.discardDeck.unshift(discardACard()); // acquire a lock on discardDeck
+            Card discardedCard = discardACard();
+            this.discardDeck.unshift(discardedCard); // acquire a lock on discardDeck
+            System.out.println("player " + this.playerIndex + " discards a " + discardedCard.getValue() + " to deck " + this.discardDeck.getDeckIndex());
+            System.out.println("player " + this.playerIndex + " current hand is " + getHandAsString());
             if (hasWinningCombo()) {
                 firePlayerWonEvent( new PlayerWonEvent(this) );
                 this.gameOver = true; // don't wait for GameOverEvent, shut down immediately and stop bombarding CardGame with winning events
@@ -57,7 +63,7 @@ public class Player extends Thread implements PlayerListener {
 
     Card discardACard() {
         if (!isFull()) // TODO: move to the run method?
-            throw new RuntimeException("Can only discards cards when the hand is full.");
+            throw new RuntimeException("Can only discard cards when the hand is full.");
         Card cardToDiscard = null;
         if (this.strategy == 1) {
             // unshift an unpreferred card in a FIFO order:
@@ -84,7 +90,8 @@ public class Player extends Thread implements PlayerListener {
         // verify the source is the same as this.cardGame? But who else...
         // Object source = event.getSource(); if (source instanceof CardGame)
         this.gameOver = true;
-        System.out.println("Player " + this.playerIndex + " is leaving the game");
+        System.out.println("player " + this.playerIndex + " final hand is " + getHandAsString());
+        System.out.println("player " + this.playerIndex + " exits");
         // print out this.cardsArray
     }
 
@@ -144,5 +151,20 @@ public class Player extends Thread implements PlayerListener {
     synchronized boolean isEmpty() {
         return (this.top == 0);
     }
-
+    synchronized Card top() throws StackUnderflowException {
+        if (this.isEmpty())
+            throw new StackUnderflowException();
+        return this.cardsArray[this.top - 1].getCopy();
+    }
+    synchronized String getHandAsString() {
+        if (this.isEmpty())
+            throw new StackUnderflowException();
+        String hand = " ";
+        Card fail = this.cardsArray[0];
+        System.out.println(hand);
+        for (int i=0; i<this.top; i++) {
+            hand = hand + " " + this.cardsArray[i].getValue();
+        }
+        return hand;
+    }
 }

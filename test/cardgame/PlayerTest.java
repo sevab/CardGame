@@ -41,7 +41,9 @@ public class PlayerTest {
      public void should_be_able_to_accept_and_store_cards_through_the_push_method_and_throw_stackoverflowexception() {
         // init
         CardDeck initialCardDeck, discardDeck, drawDeck;
-        initialCardDeck = discardDeck = drawDeck = new CardDeck(0);
+        initialCardDeck = new CardDeck(0,0);
+        discardDeck = new CardDeck(1,0);
+        drawDeck = new CardDeck(2,0);
         int playerIndex = 1;
         int handSize = 3;
         int strategy = 1;
@@ -64,8 +66,8 @@ public class PlayerTest {
      }
      @Test
      public void should_be_able_to_delete_cards_at_an_index_and_return_that_card() {
-        CardDeck initialCardDeck = new CardDeck(0);
-        CardDeck discardDeck = new CardDeck(0);
+        CardDeck initialCardDeck = new CardDeck(0, 0);
+        CardDeck discardDeck = new CardDeck(1, 0);
         CardDeck drawDeck = discardDeck; //= new CardDeck(0);
         int playerIndex = 1;
         int handSize = 3;
@@ -107,8 +109,8 @@ public class PlayerTest {
 
     @Test
     public void should_tell_if_has_a_winning_combination_of_cards() {
-        CardDeck initialCardDeck = new CardDeck(0);
-        CardDeck discardDeck = new CardDeck(0);
+        CardDeck initialCardDeck = new CardDeck(0,0);
+        CardDeck discardDeck = new CardDeck(1,0);
         CardDeck drawDeck = discardDeck; //= new CardDeck(0);
         int playerIndex = 1;
         int handSize = 3;
@@ -138,8 +140,8 @@ public class PlayerTest {
     @Test
     public void should_discard_cards_as_expected_according_to_strategy_1() {
         // should not allow discarding cards when not full
-        CardDeck initialCardDeck = new CardDeck(0);
-        CardDeck discardDeck = new CardDeck(0);
+        CardDeck initialCardDeck = new CardDeck(0,0);
+        CardDeck discardDeck = new CardDeck(1,0);
         CardDeck drawDeck = discardDeck; //= new CardDeck(0);
         int playerIndex = 1;
         int handSize = 3;
@@ -154,7 +156,7 @@ public class PlayerTest {
             player.discardACard();
             fail( "Missing exception" );
         } catch (Exception e){
-            assertTrue(e.getMessage().equals("Can only discards cards when the hand is full."));
+            assertTrue(e.getMessage().equals("Can only discard cards when the hand is full."));
         }
         // should discard a preffered card when full full of preffered cards
         player.push(new Card(1));
@@ -205,9 +207,9 @@ public class PlayerTest {
     // public void should_wait_when_a_deck_is_empty
     @Test
     public void should_wait_and_try_again_if_a_deck_is_empty_when_discarding() {
-        CardDeck initialCardDeck = new CardDeck(0);
-        CardDeck discardDeck = new CardDeck(1);
-        CardDeck drawDeck = new CardDeck(1);
+        CardDeck initialCardDeck = new CardDeck(0,0);
+        CardDeck discardDeck = new CardDeck(1,1);
+        CardDeck drawDeck = new CardDeck(2,1);
         int playerIndex = 1;
         int handSize = 3;
         int strategy = 1;
@@ -232,9 +234,9 @@ public class PlayerTest {
     @Test
     public void should_fire_a_player_won_event_and_terminate_the_game_when_wins() {
         System.out.println("Test 6/7");
-        CardDeck initialCardDeck = new CardDeck(0);
-        CardDeck discardDeck = new CardDeck(2);
-        CardDeck drawDeck = new CardDeck(2);
+        CardDeck initialCardDeck = new CardDeck(0,0);
+        CardDeck discardDeck = new CardDeck(1,2);
+        CardDeck drawDeck = new CardDeck(2,2);
         int playerIndex = 1;
         int handSize = 3;
         int strategy = 1;
@@ -261,9 +263,9 @@ public class PlayerTest {
     @Test
     public void should_not_interfere_with_other_player_threads() {
         System.out.println("Test 7/7");
-        CardDeck initialCardDeck = new CardDeck(0);
-        CardDeck discardDeck = new CardDeck(2); // discard Deck for player2, but plays role of a draw deck for player1
-        CardDeck drawDeck = new CardDeck(2);    // draw Deck for player2, but plays a role of a discard deck for player1
+        CardDeck initialCardDeck = new CardDeck(0,0);
+        CardDeck discardDeck = new CardDeck(1,2); // discard Deck for player2, but plays role of a draw deck for player1
+        CardDeck drawDeck = new CardDeck(2,2);    // draw Deck for player2, but plays a role of a discard deck for player1
         int playerIndex = 1;
         int handSize = 3;
         int strategy = 1;
