@@ -6,6 +6,8 @@ package cardgame;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -18,7 +20,8 @@ public class Player extends Thread implements PlayerListener {
     private int top;
     private int playerIndex;
     private CardGame cardGame;
-    private boolean gameOver = false; // volatile?
+    private volatile boolean gameOver = false; // volatile?
+    private volatile boolean gamePaused = false; // volatile?
     private CardDeck discardDeck;
     private CardDeck drawDeck;
     private int strategy;
@@ -37,7 +40,7 @@ public class Player extends Thread implements PlayerListener {
     }
 
     public void run() {
-        System.out.println("Player " + this.playerIndex + " has joined the game");
+        // System.out.println(Thread.currentThread().getName() + "I am player " + this.playerIndex);
         try {
             logAction("Player " + this.playerIndex + " has joined the game");
             logAction("player " + this.playerIndex + " initial hand is " + getHandAsString());
@@ -49,6 +52,18 @@ public class Player extends Thread implements PlayerListener {
             this.gameOver = true; // don't wait for GameOverEvent, shut down immediately and stop bombarding CardGame with winning events 
         }
         while (!gameOver) {
+            if (this.gamePaused) {
+                System.out.println("player " + this.playerIndex + " paused and waiting...");
+                this.cardGame.confirmPlayerState( new PlayerStateEvent(this), "pause" );
+                // syncronized this or syncronized the game?
+                // also, this.wait , or this.cardGame.game?
+                synchronized (this) {
+                    try { wait(); } catch (InterruptedException e) {}
+                }
+                System.out.println("player " + this.playerIndex + " resumed...");
+                this.cardGame.confirmPlayerState( new PlayerStateEvent(this), "resume" );
+            }
+            
             while(!isFull()) {
                 try {
                     push(this.drawDeck.pop()); // acquires a lock on drawDeck
@@ -111,8 +126,22 @@ public class Player extends Thread implements PlayerListener {
         // print out this.cardsArray
     }
 
+    public void pausePlayerEventHandler(GameStateEvent event) {
+        synchronized (this) {
+            this.gamePaused = true;    
+        }
+        System.out.println("player " + this.playerIndex + " is pausing... ");
+    }
 
-    synchronized void push(Card newCard) throws StackOverflowException {
+    public void resumePlayerEventHandler(GameStateEvent event) {
+        synchronized (this) {
+            this.gamePaused = false;
+            this.notify();
+        }
+        System.out.println("player " + this.playerIndex + " is resuming... ");
+    }
+
+    void push(Card newCard) throws StackOverflowException {
         if (this.top < this.cardsArray.length) {
             this.cardsArray[this.top] = newCard;
             this.top++;
@@ -121,11 +150,11 @@ public class Player extends Thread implements PlayerListener {
         }
     }
 
-    synchronized int getPlayerIndex() {
+    int getPlayerIndex() {
         return this.playerIndex;
     }
 
-    synchronized Card delete_at(int index) {
+    Card delete_at(int index) {
         if (this.isEmpty())
             throw new StackUnderflowException("Player's hands are empty. Nothing to delete.");
         if (this.cardsArray[index] == null)
@@ -143,7 +172,7 @@ public class Player extends Thread implements PlayerListener {
         return cardToDelete;
     }
 
-    synchronized boolean hasWinningCombo() {
+    boolean hasWinningCombo() {
         if (this.top != this.cardsArray.length-1 ) // only full-1 hands are accepted
             return false;
         boolean flag = true;
@@ -155,24 +184,24 @@ public class Player extends Thread implements PlayerListener {
         }
         return flag;
     }
-    synchronized boolean preferresCard(Card card) {
+    boolean preferresCard(Card card) {
         return (card.getValue() == this.playerIndex);
     }
-    synchronized boolean isFull() {
+    boolean isFull() {
         return (this.top == this.cardsArray.length);
     }
-    synchronized int getSize() {
+    int getSize() {
         return this.top;
     }
-    synchronized boolean isEmpty() {
+    boolean isEmpty() {
         return (this.top == 0);
     }
-    synchronized Card top() throws StackUnderflowException {
+    Card top() throws StackUnderflowException {
         if (this.isEmpty())
             throw new StackUnderflowException();
         return this.cardsArray[this.top - 1].getCopy();
     }
-    synchronized String getHandAsString() {
+    String getHandAsString() {
         if (this.isEmpty())
             throw new StackUnderflowException();
         String hand = " ";
@@ -183,7 +212,7 @@ public class Player extends Thread implements PlayerListener {
         }
         return hand;
     }
-    synchronized void logAction(String action) throws IOException {
+    private void logAction(String action) throws IOException {
         System.out.println(action);
         Helper.appendLineToFile( output_file, action);
     }

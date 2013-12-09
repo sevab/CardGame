@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Map;
 import java.util.Scanner;
 
 /**
@@ -19,26 +20,32 @@ public class CardGame extends Thread implements CardGameListener {
 	private final Player[] players;
 	private final CardDeck[] cardDecks;
 	private CardDeck initialDeck;
-	private boolean gameOver = false; // volatile?
+	private volatile boolean gameOver = false;
     private Player winner = null;
+    private Thread userInputThread;
+    private int playersConfirmed;
+    private volatile boolean inIntermediateState;
+    private volatile boolean gamePaused = false;
+
+
 
     CardGame(int numberOfPlayers, int handSize, CardDeck initialDeck) {
     	//FEATURE: validate deck if it's possible to win with that deck given player num? (e.g. 1 player && num of preffered cards < k)
-        validateDeck(initialDeck, numberOfPlayers, handSize);
-        // TODO: validate numberOfPlayers && handSize > 0
+        validateDeck(initialDeck, numberOfPlayers, handSize); // numberOfPlayers & handSize are validated in the main() method
         this.initialDeck = initialDeck;
         this.numberOfPlayers = numberOfPlayers;
         this.handSize = handSize;
         this.players = new Player[numberOfPlayers];
         this.cardDecks = new CardDeck[numberOfPlayers];
+        // remove and make static and final? what are final's implications?
+        this.userInputThread = new Thread(new UserInputThread());
+        this.playersConfirmed = 0;
+        this.inIntermediateState = false;
     }
 
+    // do we join the thread or explicitly stop it once the run() completes?
 	public void run() {
-        // init players & decks
-        // for (int i=0; i < this.numberOfPlayers; i++) {
-        // 	this.players[i] = new Player(this, i+1, this.handSize);
-        // 	cardDecks[i] = new CardDeck(this.handSize);
-        // }
+        // System.out.println(Thread.currentThread().getName() + "I am the CardGame");
         for (int i=0; i < this.numberOfPlayers; i++) {
         	// each deck should be able to hold at least twice the number of cards
         	// research if can minimize this furhter
@@ -51,7 +58,6 @@ public class CardGame extends Thread implements CardGameListener {
         	// TODO: store strategy in this.strategy
         	this.players[i] = new Player(this, i+1, this.handSize+1, 1, cardDecks[i], cardDecks[(i+this.numberOfPlayers-1)%this.numberOfPlayers]);
         }
-
         System.out.println("Distributing cards...");
         // distribute cards among players
         for (int i=0; i < this.handSize; i++) {
@@ -65,17 +71,13 @@ public class CardGame extends Thread implements CardGameListener {
         		this.cardDecks[j].push(this.initialDeck.pop());
         	}
         }
-
         System.out.println("Starting players...");
     	for (Player player : this.players)
     		player.start();
     }
-
-
-
     public synchronized void playerWonEventHandler(PlayerWonEvent event) {
 		// make sure all subsequent PlayerWonEvents aren't accepted or do change the state of the game
-		if (!gameOver) {
+		if (!this.gameOver) {
 			Object winningPlayer = event.getSource();
 			if (winningPlayer instanceof Player) {
 				this.gameOver = true;
@@ -86,133 +88,178 @@ public class CardGame extends Thread implements CardGameListener {
             System.out.println("\nSending shutdown notices...\n");
 		    for (Player player : this.players)
 		    	player.gameOverEventHandler( new GameOverEvent(this) );
+            // interrupt input thread BEFORE SHUTTING DOWN players. No pause/resume after shutdown
+            
+
+            // try {
+            //     System.in.close();
+            // } catch (IOException e) {
+            //     System.out.println("Oops..somethign went wrong.");
+            //     System.exit(1);
+            // }
+            
+            System.out.println("interrupting userInputThread");
+            this.userInputThread.interrupt();
+            try {
+                this.userInputThread.join();
+                System.out.println("userInputThread killed");
+                // wait 2 secs and exit
+            } catch (InterruptedException ex) {}
+            // or wait for Players to report shutdown and then just System.exit(0);
 		}
+    }
+
+    // combine pauseGame + resumeGame into one
+    void pauseGame() {
+        if (!this.gamePaused) {
+            System.out.println("Pausing game...");
+             for (Player player : this.players)
+                player.pausePlayerEventHandler( new GameStateEvent(this) );
+        } else {
+            System.out.println("Game is already paused. Press r+Enter to resume.");
+            notifyUserInputThread();
+        }
+    }
+    void resumeGame() {
+        if (gamePaused) {
+            System.out.println("Resuming game...");
+             for (Player player : this.players)
+                player.resumePlayerEventHandler( new GameStateEvent(this) );
+        } else {
+            System.out.println("Game is already running. Press p+Enter to pause.");
+            notifyUserInputThread();
+        }   
+    }
+
+
+    // void pauseGame()  {pauseOrResumeGame("resume");}
+    // void resumeGame() {pauseOrResumeGame("pause");}
+    // void pauseOrResumeGame(String action) {
+    //     Str str = null;
+    //     switch (action) {
+    //         case "pause" : str = (this.gamePaused) ?
+    //                         "Game is already paused. Press r+Enter to resume." :
+    //                         "Pausing game..."; break;
+    //         case "resume": str = (!this.gamePaused) ?
+    //                         "Game is already running. Press p+Enter to pause." :
+    //                         "Resuming game..."; break;
+    //     }
+    //     System.out.println(str);
+    //     for (Player player : this.players)
+    //         player.resumePlayerEventHandler( new GameStateEvent(this) );
+    // }
+    // syncrhonizing incrementation of playersConfirmed
+    synchronized void confirmPlayerState( PlayerStateEvent event, String state ) {
+        // verify String state corresponds to the current this.gamePaused state?
+        this.playersConfirmed++;
+        if (this.playersConfirmed == this.numberOfPlayers) {            
+            String str;
+            switch (state) {
+                case "pause" : this.gamePaused = true; // synchronize(this) ? doubt
+                               str = "Game paused."; break;
+                case "resume": this.gamePaused = false; // synchronize(this) ? doubt
+                               str = "Game resumed."; break;
+                default:       throw new RuntimeException("invalid state");
+            }
+            System.out.println(str);
+            this.playersConfirmed = 0;
+            notifyUserInputThread();
+        }
+    }
+
+    void notifyUserInputThread() {
+        this.inIntermediateState = false;
+        synchronized(this.userInputThread) {
+            this.userInputThread.notify();
+        }
+    }
+    public void startInputThread() {
+        this.userInputThread.start();
     }
 
     void validateDeck(CardDeck deck, int numberOfPlayers, int handSize) {
     	if ( deck.getSize() < 2 * numberOfPlayers * handSize)
     		throw new RuntimeException("Insufficient number of cards in the initial deck. Please, import a larger deck");
     }
-    synchronized boolean isOver() {
+    boolean isOver() {
         return this.gameOver;
     }
-    synchronized Player getWinner() {
+    Player getWinner() {
         if (isOver())
             return this.winner;
         throw new RuntimeException("No winner yet - The game hasn't ended yet.");
     }
 
-
-
-
-
-
-
-
-
-    // throws?
-	public static void main(String[] args)  throws FileNotFoundException, IOException {
+    // TODO: remove unfixed exceptions
+	public static void main(String[] args) throws FileNotFoundException, IOException {
         if (args.length < 2) {
             System.err.println("\n Usage Error: CardGame number_of_players number_of_cards_per_player\n");
             System.exit(1);
         }
-
         // initialize to something, otherwise compiler complains
         int numberOfPlayers = -1;
         int handSize = -1;
-        // Validate args are ints
         try {
             numberOfPlayers = Integer.parseInt(args[0]);
             handSize = Integer.parseInt(args[1]);
+            if (numberOfPlayers < 1 || handSize < 1) // Validate args are larger than 1
+                throw new NumberFormatException();
         } catch (NumberFormatException e) {
             System.err.println("\nUsage Error: CardGame number_of_players number_of_cards_per_player"); 
             System.err.println("       Arguements number_of_players and number_of_cards_per_player must be integers larger than 0\n");
             System.exit(1);
         }
-        // Validate args are larger than 1
-        if (numberOfPlayers < 1 || handSize < 1) {
-            System.err.println("\nUsage Error: CardGame number_of_players number_of_cards_per_player"); 
-            System.err.println("       Arguements number_of_players and number_of_cards_per_player must be integers larger than 0\n");
-            System.exit(1);
-        }
 
-        // Get & validate file
-        String fileName = null;
-        File f = new File("fake/path");
-        while (!f.exists()) {        
-            System.out.print("Please enter the path to the card deck: ");
-            try {
-                fileName = (new BufferedReader(new InputStreamReader(System.in))).readLine();
-                f = new File(fileName);
-                if(!f.exists()) {
-                    System.out.println("It doesn't look like this file exists..");
-                }
-            } catch (IOException e) {
-                System.out.println("Oops..somethign went wrong.");
-                System.exit(1);
-            }
-        }
-        // Once file received
-        System.out.println("We're loading the file in...");
-        System.out.println("File: " + fileName);
-        System.out.println("Number of Players: " + numberOfPlayers + ", Hand Size: " + handSize);
-        
-        // CardDeck initialDeck = new CardDeck[Helper.linesInAFile(f)];
-        int linesInAFile = Helper.linesInAFile(f);
-        System.out.println("lines in a file: " + linesInAFile);
-
-
-        Scanner scanner = new Scanner(f);
-        CardDeck initialDeck = new CardDeck(0, linesInAFile);
-        int [] tall = new int [100];
-        while(scanner.hasNextInt()){
-           initialDeck.push(new Card(scanner.nextInt()));
-
-           // System.out.println("initial deck top: " + initialDeck.top().getValue());
-        }
-        scanner.close();
-
-        // create game_output directory
-        File output_dir = new File("game_output");
-        output_dir.mkdir();
-        // delete any files in game_output directory
-        for(File file: output_dir.listFiles()) file.delete();
-
-
+        // Get & validate files
+        File f = Helper.readFileFromCommandLine();
+        CardDeck initialDeck = Helper.fileToCardDeck(f);
+        Helper.createNewDirectory("game_output");
         System.out.println("Starting the game...");
-        System.out.println("Press p to pause, press r to resume");
-        new CardGame(numberOfPlayers, handSize, initialDeck).start();
-
-
-
-        // /Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/test/cardgame/testDeck.txt
-        // /Users/sevabaskin/Dropbox/2nd\ Year/Java/CW2/CardGame/test/cardgame/testDeck.txt
-        // CardDeck initialDeck = new CardDeck[linesInAFile]
-
-        // NEXT:
-        // Pause and Resume feature
-        // put players into pause state (either exit or wait, doesn't matter) by sending gamePaused event
-        // resume
-
-        // GAME EXITING:
-        // on game's end: wait for players to notify they've left the game
-        // write down & print out decks
-        // System.exit(1)
-        // find way to bypass user input waiting
-        // interrupt the thread waiting for the user input
-
-        // Implement printing and reading
-
-
-
-        // System.out.println("Game 1:");
-        // CardDeck testCardDeck = new CardDeck(18);
-        // for (int i=0; i<18; i++)
-        //     testCardDeck.push(new Card(3));
-        // CardGame testGame = new CardGame(3, 3, testCardDeck);
-        // testGame.start();
-        // try {
-        //     Thread.sleep(10);
-        // } catch (InterruptedException e) {}
+        System.out.println("\n\nWhile the game is running press p+Enter to pause the game or r+Enter to resume.\nThis message will disappear in less than 1 sec.\n\n");
+        // try { Thread.sleep(1000); } catch (InterruptedException e) {}
+        CardGame game = new CardGame(numberOfPlayers, handSize, initialDeck);
+        game.start();
+        game.startInputThread();
 	}
+
+
+
+    // if the game is hanging on exit, make sure all instances of this are termindated
+    // if game hangs, make sure that locks in the synchronized blocks in UserInputThread and confirmPlayerState are referencing the right objects
+    private class UserInputThread implements Runnable {
+        public void run() {
+            // while
+            while(true) {
+                if (inIntermediateState) {
+                    synchronized(userInputThread) { // `this` doesn't work for some reason
+                        try {
+                            // -- System.out.println("userInputThread is now waiting for a notification");
+                            userInputThread.wait(); // a bit ugly (or not?), consider using a dedicated monitor obj
+                            // -- System.out.println("UserInputThread received notification to stop waiting.");
+                        } catch (InterruptedException ex) {}
+                    }
+                }
+                try {
+                    System.out.print("Press p+Enter to pause or r+Enter to resume: ");
+                    String userInput = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+                    // synchronized()?
+                    switch (userInput) {
+                        case "p" :  inIntermediateState = true;
+                                    pauseGame(); break;
+                        case "r" :  inIntermediateState = true;
+                                    resumeGame(); break;
+                        default  : System.out.println("Incorrect choice. Try again."); // print full instructions
+                    }
+                } catch (IOException e) {
+                    System.out.println("Oops..somethign went wrong.");
+                    System.exit(1);
+                }                
+            }
+
+        }
+    }
+
+
 }
+
+// /Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/test/cardgame/testDeck.txt

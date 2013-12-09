@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package cardgame;
 
 /**
@@ -24,7 +18,7 @@ public class CardDeck {
     }
     
     // storing the copy of newCard, since the object may be collected later on by garbage collector
-    synchronized void push(Card newCard) throws StackOverflowException {
+    void push(Card newCard) throws StackOverflowException {
         if (this.top < this.cardsArray.length) {
             this.cardsArray[this.top] = newCard.getCopy();
             this.top++;
@@ -54,17 +48,17 @@ public class CardDeck {
             throw new StackOverflowException("Card deck is full. You cannot add more cards.");
         }
     }
-    synchronized int getSize() {
+    int getSize() {
         return this.top;
     }
     
-    synchronized boolean isEmpty() {
+    boolean isEmpty() {
         return (this.top == 0);
     }
-    synchronized int getDeckIndex() {
+    int getDeckIndex() {
         return this.deckIndex;
     }
-    synchronized Card top() throws StackUnderflowException {
+    Card top() throws StackUnderflowException {
         if (this.isEmpty())
             throw new StackUnderflowException();
         return this.cardsArray[this.top - 1].getCopy();
