@@ -22,6 +22,7 @@ public class CardGame extends Thread implements CardGameListener {
 	private CardDeck initialDeck;
 	private volatile boolean gameOver = false;
     private Player winner = null;
+    private UserInputThread userInputRunnable;
     private Thread userInputThread;
     private int playersConfirmed;
     private volatile boolean inIntermediateState;
@@ -38,7 +39,8 @@ public class CardGame extends Thread implements CardGameListener {
         this.players = new Player[numberOfPlayers];
         this.cardDecks = new CardDeck[numberOfPlayers];
         // remove and make static and final? what are final's implications?
-        this.userInputThread = new Thread(new UserInputThread());
+        this.userInputRunnable = new UserInputThread();
+        this.userInputThread = new Thread(this.userInputRunnable);
         this.playersConfirmed = 0;
         this.inIntermediateState = false;
     }
@@ -85,27 +87,21 @@ public class CardGame extends Thread implements CardGameListener {
 		        System.out.println("Game won by Player " + ((Player) winningPlayer).getPlayerIndex() );
 			    System.out.println("Game Over!");
 			}
+            // synchronize?
+            System.out.println("Shutting down user input thread");
+            this.userInputRunnable.closeBufferdReader();
+            this.userInputThread.interrupt();
+            try {
+                this.userInputThread.join();
+            } catch (InterruptedException ex) {}
+            // or wait for Players to report shutdown and then just System.exit(0);
+
             System.out.println("\nSending shutdown notices...\n");
 		    for (Player player : this.players)
 		    	player.gameOverEventHandler( new GameOverEvent(this) );
             // interrupt input thread BEFORE SHUTTING DOWN players. No pause/resume after shutdown
             
-
-            // try {
-            //     System.in.close();
-            // } catch (IOException e) {
-            //     System.out.println("Oops..somethign went wrong.");
-            //     System.exit(1);
-            // }
             
-            System.out.println("interrupting userInputThread");
-            this.userInputThread.interrupt();
-            try {
-                this.userInputThread.join();
-                System.out.println("userInputThread killed");
-                // wait 2 secs and exit
-            } catch (InterruptedException ex) {}
-            // or wait for Players to report shutdown and then just System.exit(0);
 		}
     }
 
@@ -227,8 +223,16 @@ public class CardGame extends Thread implements CardGameListener {
     // if the game is hanging on exit, make sure all instances of this are termindated
     // if game hangs, make sure that locks in the synchronized blocks in UserInputThread and confirmPlayerState are referencing the right objects
     private class UserInputThread implements Runnable {
+        private InputStreamReader isr;
+        private BufferedReader br;
+        String userInput;
+
+        UserInputThread() {
+            InputStreamReader isr = new InputStreamReader(System.in);
+            BufferedReader br = new BufferedReader(isr);
+        }
+
         public void run() {
-            // while
             while(true) {
                 if (inIntermediateState) {
                     synchronized(userInputThread) { // `this` doesn't work for some reason
@@ -241,9 +245,11 @@ public class CardGame extends Thread implements CardGameListener {
                 }
                 try {
                     System.out.print("Press p+Enter to pause or r+Enter to resume: ");
-                    String userInput = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+                    try { // move String userInput to constructor?
+                        this.userInput = br.readLine();
+                    } catch(NullPointerException e) {}
                     // synchronized()?
-                    switch (userInput) {
+                    switch (this.userInput) {
                         case "p" :  inIntermediateState = true;
                                     pauseGame(); break;
                         case "r" :  inIntermediateState = true;
@@ -255,7 +261,14 @@ public class CardGame extends Thread implements CardGameListener {
                     System.exit(1);
                 }                
             }
-
+        }
+        public void closeBufferdReader() {
+            try {
+                System.in.close();
+            } catch (IOException e) {
+                System.out.println("Oops..somethign went wrong in closeBufferdReader() method");
+                System.exit(1);
+            }
         }
     }
 
