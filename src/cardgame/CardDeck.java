@@ -63,4 +63,12 @@ public class CardDeck {
             throw new StackUnderflowException();
         return this.cardsArray[this.top - 1].getCopy();
     }
+    // test
+    public String toString() {
+        String result = "";
+        if (this.isEmpty()) return result;
+        for (int i=0; i<this.top; i++)
+            result = result + this.cardsArray[i].getValue() + " ";
+        return result;
+    }
 }

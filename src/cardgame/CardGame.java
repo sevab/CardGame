@@ -47,7 +47,7 @@ public class CardGame extends Thread implements CardGameListener {
 
     // do we join the thread or explicitly stop it once the run() completes?
 	public void run() {
-        // System.out.println(Thread.currentThread().getName() + "I am the CardGame");
+        System.out.println(Thread.currentThread().getName() + " I am the CardGame");
         for (int i=0; i < this.numberOfPlayers; i++) {
         	// each deck should be able to hold at least twice the number of cards
         	// research if can minimize this furhter
@@ -85,24 +85,48 @@ public class CardGame extends Thread implements CardGameListener {
 				this.gameOver = true;
                 this.winner = (Player) winningPlayer;
 		        System.out.println("Game won by Player " + ((Player) winningPlayer).getPlayerIndex() );
-			    System.out.println("Game Over!");
+			    System.out.println("Game Over!"); // TODO: print gameover once it's trully over?
 			}
+
+
             // synchronize?
-            System.out.println("Shutting down user input thread");
-            this.userInputRunnable.closeBufferdReader();
+            
+
+            System.out.println("interrupting userInputThread");
             this.userInputThread.interrupt();
+            System.out.println("userInputThread interrupted");
+
             try {
+                System.out.println("userInputThread joining...");
                 this.userInputThread.join();
+                System.out.println("userInputThread joined");
             } catch (InterruptedException ex) {}
             // or wait for Players to report shutdown and then just System.exit(0);
 
             System.out.println("\nSending shutdown notices...\n");
-		    for (Player player : this.players)
-		    	player.gameOverEventHandler( new GameOverEvent(this) );
+		    for (Player player : this.players) {
+
+                synchronized(player) {
+                    player.gameOverEventHandler( new GameOverEvent(this) );    
+                }
+                
+            }
+		    	
+                System.out.println("\n Notifications sent out...\n");
+            // try {
+            //     Thread.sleep(3000);
+            // } catch (InterruptedException e) {}
+            // System.out.println(Thread.currentThread().getName() + "is still active");
+            // System.exit(0);
+            // System.out.println();
             // interrupt input thread BEFORE SHUTTING DOWN players. No pause/resume after shutdown
+            // 10DEC: still hangs sometimes. Receive player confirmations and force shutdown the game for this scenarios.
             
-            
+            // Strategy 0: it seems like you don't need to close System.in to interrupt a thread. Try avoid using it.
+            // Strategy 1: ok, try interrupting Bufferedreader
 		}
+        System.out.println("playerWonEventHandler completed");
+        // System.out.println(Thread.currentThread().getName() + "is still active");
     }
 
     // combine pauseGame + resumeGame into one
@@ -126,7 +150,6 @@ public class CardGame extends Thread implements CardGameListener {
             notifyUserInputThread();
         }   
     }
-
 
     // void pauseGame()  {pauseOrResumeGame("resume");}
     // void resumeGame() {pauseOrResumeGame("pause");}
@@ -223,16 +246,21 @@ public class CardGame extends Thread implements CardGameListener {
     // if the game is hanging on exit, make sure all instances of this are termindated
     // if game hangs, make sure that locks in the synchronized blocks in UserInputThread and confirmPlayerState are referencing the right objects
     private class UserInputThread implements Runnable {
-        private InputStreamReader isr;
-        private BufferedReader br;
-        String userInput;
+        // private InputStreamReader isr;
+        // private BufferedReader br;
 
-        UserInputThread() {
-            InputStreamReader isr = new InputStreamReader(System.in);
-            BufferedReader br = new BufferedReader(isr);
-        }
+
+        // InputStreamReader isr;
+        // BufferedReader br;
+        // UserInputThread() {
+        //     InputStreamReader isr = new InputStreamReader(System.in);
+        //     BufferedReader br = new BufferedReader(isr);
+        // }
 
         public void run() {
+            BufferedReader br;
+            String userInput = null;
+
             while(true) {
                 if (inIntermediateState) {
                     synchronized(userInputThread) { // `this` doesn't work for some reason
@@ -243,31 +271,44 @@ public class CardGame extends Thread implements CardGameListener {
                         } catch (InterruptedException ex) {}
                     }
                 }
-                try {
-                    System.out.print("Press p+Enter to pause or r+Enter to resume: ");
-                    try { // move String userInput to constructor?
-                        this.userInput = br.readLine();
-                    } catch(NullPointerException e) {}
+                System.out.print("Press p+Enter to pause or r+Enter to resume: ");
+                try { // move String userInput to constructor?
+                    // does splitting this into several bits allows multiple-line input?
+                    br = (new BufferedReader(new InputStreamReader(System.in)));
+
+                    // userInput  = br.readLine();
+
+                    try {
+                        // wait until we have data to complete a readLine()
+                        while (!br.ready()) {
+                          Thread.sleep(200);
+                        }
+                        userInput = br.readLine();
+                    } catch (InterruptedException e) {
+                        System.out.println("UserInputThread interrupted");
+                        return;
+                        // how about we abort right here by throwing something else, or not catching the exception
+                    }
+                    
+
+                    // System.out.println("User Input\n===========\n"+ userInput +"\n\n");
+
                     // synchronized()?
-                    switch (this.userInput) {
-                        case "p" :  inIntermediateState = true;
-                                    pauseGame(); break;
-                        case "r" :  inIntermediateState = true;
-                                    resumeGame(); break;
-                        default  : System.out.println("Incorrect choice. Try again."); // print full instructions
+                    try {
+                        switch ( userInput ) {
+                            case "p" :  inIntermediateState = true;
+                                        pauseGame(); break;
+                            case "r" :  inIntermediateState = true;
+                                        resumeGame(); break;
+                            default  : System.out.println("Incorrect choice. Try again."); // print full instructions
+                        }
+                    } catch(NullPointerException e) {
+                        System.out.println("userInput is null. LOL, who cares.");
                     }
                 } catch (IOException e) {
-                    System.out.println("Oops..somethign went wrong.");
+                    System.out.println("Oops..somethign went wrong in UserInputThread.run().");
                     System.exit(1);
                 }                
-            }
-        }
-        public void closeBufferdReader() {
-            try {
-                System.in.close();
-            } catch (IOException e) {
-                System.out.println("Oops..somethign went wrong in closeBufferdReader() method");
-                System.exit(1);
             }
         }
     }
@@ -275,4 +316,6 @@ public class CardGame extends Thread implements CardGameListener {
 
 }
 
-// /Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/test/cardgame/testDeck.txt
+/*
+*            /Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/test/cardgame/testDeck.txt
+*/
