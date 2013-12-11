@@ -25,8 +25,10 @@ public class CardGame extends Thread implements CardGameListener {
     private UserInputThread userInputRunnable;
     private Thread userInputThread;
     private int playersConfirmed;
+    private int playersTerminated;
     private volatile boolean inIntermediateState;
     private volatile boolean gamePaused = false;
+
 
 
 
@@ -42,6 +44,7 @@ public class CardGame extends Thread implements CardGameListener {
         this.userInputRunnable = new UserInputThread();
         this.userInputThread = new Thread(this.userInputRunnable);
         this.playersConfirmed = 0;
+        this.playersTerminated = 0;
         this.inIntermediateState = false;
     }
 
@@ -85,48 +88,23 @@ public class CardGame extends Thread implements CardGameListener {
 				this.gameOver = true;
                 this.winner = (Player) winningPlayer;
 		        System.out.println("Game won by Player " + ((Player) winningPlayer).getPlayerIndex() );
-			    System.out.println("Game Over!"); // TODO: print gameover once it's trully over?
+			    // System.out.println("Game Over!"); // TODO: print gameover once it's trully over?
 			}
-
-
             // synchronize?
             
-
-            System.out.println("interrupting userInputThread");
             this.userInputThread.interrupt();
-            System.out.println("userInputThread interrupted");
-
             try {
-                System.out.println("userInputThread joining...");
                 this.userInputThread.join();
-                System.out.println("userInputThread joined");
             } catch (InterruptedException ex) {}
-            // or wait for Players to report shutdown and then just System.exit(0);
-
-            System.out.println("\nSending shutdown notices...\n");
+            // System.out.println("\nSending shutdown notices...\n");
 		    for (Player player : this.players) {
-
                 synchronized(player) {
                     player.gameOverEventHandler( new GameOverEvent(this) );    
-                }
-                
+                }   
             }
-		    	
-                System.out.println("\n Notifications sent out...\n");
-            // try {
-            //     Thread.sleep(3000);
-            // } catch (InterruptedException e) {}
-            // System.out.println(Thread.currentThread().getName() + "is still active");
-            // System.exit(0);
-            // System.out.println();
-            // interrupt input thread BEFORE SHUTTING DOWN players. No pause/resume after shutdown
-            // 10DEC: still hangs sometimes. Receive player confirmations and force shutdown the game for this scenarios.
-            
-            // Strategy 0: it seems like you don't need to close System.in to interrupt a thread. Try avoid using it.
-            // Strategy 1: ok, try interrupting Bufferedreader
+            // System.out.println("\n Notifications sent out...\n");
 		}
-        System.out.println("playerWonEventHandler completed");
-        // System.out.println(Thread.currentThread().getName() + "is still active");
+        // System.out.println("playerWonEventHandler completed");
     }
 
     // combine pauseGame + resumeGame into one
@@ -186,6 +164,24 @@ public class CardGame extends Thread implements CardGameListener {
         }
     }
 
+    // test
+    synchronized void confirmPlayerTerminated(PlayerStateEvent event) {
+        this.playersTerminated++;
+        if (this.playersTerminated == this.numberOfPlayers) {
+            String deck_state;
+            File output_file;
+            for (int i=0; i < this.numberOfPlayers; i++) {
+                deck_state = "deck " + this.cardDecks[i].getDeckIndex() + " contains cards: " + this.cardDecks[i].toString();
+                output_file = new File("game_output/deck" + this.cardDecks[i].getDeckIndex() + "_output.txt");
+                try {
+                    Helper.appendLineToFile( output_file, deck_state );
+                } catch (IOException e) {}
+            }
+            System.out.println("Game Over!"); // TODO: print gameover once it's trully over?
+
+        }
+    }
+
     void notifyUserInputThread() {
         this.inIntermediateState = false;
         synchronized(this.userInputThread) {
@@ -242,20 +238,7 @@ public class CardGame extends Thread implements CardGameListener {
 	}
 
 
-
-    // if the game is hanging on exit, make sure all instances of this are termindated
-    // if game hangs, make sure that locks in the synchronized blocks in UserInputThread and confirmPlayerState are referencing the right objects
     private class UserInputThread implements Runnable {
-        // private InputStreamReader isr;
-        // private BufferedReader br;
-
-
-        // InputStreamReader isr;
-        // BufferedReader br;
-        // UserInputThread() {
-        //     InputStreamReader isr = new InputStreamReader(System.in);
-        //     BufferedReader br = new BufferedReader(isr);
-        // }
 
         public void run() {
             BufferedReader br;
@@ -265,9 +248,7 @@ public class CardGame extends Thread implements CardGameListener {
                 if (inIntermediateState) {
                     synchronized(userInputThread) { // `this` doesn't work for some reason
                         try {
-                            // -- System.out.println("userInputThread is now waiting for a notification");
                             userInputThread.wait(); // a bit ugly (or not?), consider using a dedicated monitor obj
-                            // -- System.out.println("UserInputThread received notification to stop waiting.");
                         } catch (InterruptedException ex) {}
                     }
                 }
@@ -275,9 +256,6 @@ public class CardGame extends Thread implements CardGameListener {
                 try { // move String userInput to constructor?
                     // does splitting this into several bits allows multiple-line input?
                     br = (new BufferedReader(new InputStreamReader(System.in)));
-
-                    // userInput  = br.readLine();
-
                     try {
                         // wait until we have data to complete a readLine()
                         while (!br.ready()) {
@@ -285,26 +263,17 @@ public class CardGame extends Thread implements CardGameListener {
                         }
                         userInput = br.readLine();
                     } catch (InterruptedException e) {
-                        System.out.println("UserInputThread interrupted");
                         return;
-                        // how about we abort right here by throwing something else, or not catching the exception
                     }
-                    
-
-                    // System.out.println("User Input\n===========\n"+ userInput +"\n\n");
-
                     // synchronized()?
-                    try {
-                        switch ( userInput ) {
-                            case "p" :  inIntermediateState = true;
-                                        pauseGame(); break;
-                            case "r" :  inIntermediateState = true;
-                                        resumeGame(); break;
-                            default  : System.out.println("Incorrect choice. Try again."); // print full instructions
-                        }
-                    } catch(NullPointerException e) {
-                        System.out.println("userInput is null. LOL, who cares.");
+                    switch ( userInput ) {
+                        case "p" :  inIntermediateState = true;
+                                    pauseGame(); break;
+                        case "r" :  inIntermediateState = true;
+                                    resumeGame(); break;
+                        default  : System.out.println("Incorrect choice. Try again."); // print full instructions
                     }
+
                 } catch (IOException e) {
                     System.out.println("Oops..somethign went wrong in UserInputThread.run().");
                     System.exit(1);
@@ -315,7 +284,3 @@ public class CardGame extends Thread implements CardGameListener {
 
 
 }
-
-/*
-*            /Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/test/cardgame/testDeck.txt
-*/

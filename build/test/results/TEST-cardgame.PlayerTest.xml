@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite errors="0" failures="0" hostname="Sevas-MacBook-Air.local" name="cardgame.PlayerTest" tests="7" time="0.225" timestamp="2013-12-11T01:47:18">
+<testsuite errors="0" failures="0" hostname="Sevas-MacBook-Air.local" name="cardgame.PlayerTest" tests="7" time="0.245" timestamp="2013-12-11T15:58:21">
   <properties>
     <property name="default.javac.source" value="1.7" />
     <property name="file.encoding.pkg" value="sun.io" />
@@ -75,7 +75,7 @@
     <property name="libs.JAXB-ENDORSED.src" value="" />
     <property name="libs.hibernate-persistence.javadoc" value="" />
     <property name="libs.ejb3-persistence.classpath" value="/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/java/modules/ext/hibernate/hibernate-jpa-2.0-api-1.0.1.Final.jar" />
-    <property name="sun.java.command" value="org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner cardgame.PlayerTest filtertrace=true haltOnError=false haltOnFailure=false showoutput=true outputtoformatters=true logfailedtests=true logtestlistenerevents=false formatter=org.apache.tools.ant.taskdefs.optional.junit.BriefJUnitResultFormatter formatter=org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter,/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/test/results/TEST-cardgame.PlayerTest.xml crashfile=/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/junitvmwatcher3956074968272175503.properties propsfile=/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/junit9070180160014454238.properties" />
+    <property name="sun.java.command" value="org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner cardgame.PlayerTest filtertrace=true haltOnError=false haltOnFailure=false showoutput=true outputtoformatters=true logfailedtests=true logtestlistenerevents=false formatter=org.apache.tools.ant.taskdefs.optional.junit.BriefJUnitResultFormatter formatter=org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter,/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/test/results/TEST-cardgame.PlayerTest.xml crashfile=/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/junitvmwatcher6571159384043254862.properties propsfile=/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/junit7964141570046614313.properties" />
     <property name="built-jar.properties" value="/Users/sevabaskin/Dropbox/2nd Year/Java/CW2/CardGame/build/built-jar.properties" />
     <property name="libs.junit.src" value="" />
     <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16" />
@@ -265,229 +265,96 @@
     <property name="sun.arch.data.model" value="64" />
     <property name="mkdist.disabled" value="false" />
   </properties>
-  <testcase classname="cardgame.PlayerTest" name="should_be_able_to_delete_cards_at_an_index_and_return_that_card" time="0.008" />
-  <testcase classname="cardgame.PlayerTest" name="should_tell_if_has_a_winning_combination_of_cards" time="0.0" />
-  <testcase classname="cardgame.PlayerTest" name="should_discard_cards_as_expected_according_to_strategy_1" time="0.001" />
-  <testcase classname="cardgame.PlayerTest" name="should_wait_and_try_again_if_a_deck_is_empty_when_discarding" time="0.012" />
-  <testcase classname="cardgame.PlayerTest" name="should_fire_a_player_won_event_and_terminate_the_game_when_wins" time="0.102" />
-  <testcase classname="cardgame.PlayerTest" name="should_not_interfere_with_other_player_threads" time="0.014" />
+  <testcase classname="cardgame.PlayerTest" name="should_tell_if_has_a_winning_combination_of_cards" time="0.009" />
+  <testcase classname="cardgame.PlayerTest" name="should_discard_cards_as_expected_according_to_strategy_1" time="0.0" />
+  <testcase classname="cardgame.PlayerTest" name="should_wait_and_try_again_if_a_deck_is_empty_when_discarding" time="0.011" />
+  <testcase classname="cardgame.PlayerTest" name="should_fire_a_player_won_event_and_terminate_the_game_when_wins" time="0.101" />
+  <testcase classname="cardgame.PlayerTest" name="should_not_interfere_with_other_player_threads" time="0.013" />
   <testcase classname="cardgame.PlayerTest" name="should_be_able_to_accept_and_store_cards_through_the_push_method_and_throw_stackoverflowexception" time="0.001" />
-  <system-out><![CDATA[Thread-18 I am player 1
+  <testcase classname="cardgame.PlayerTest" name="should_be_able_to_delete_cards_at_an_index_and_return_that_card" time="0.0" />
+  <system-out><![CDATA[Thread-14 I am player 1
 Player 1 has joined the game
-Thread-18 a.k.a. player 1 does the hand method
+Thread-14 a.k.a. player 1 does the hand method
  
 player 1 initial hand is   0 1
-Thread-18 a.k.a. player 1 starts a loop
 player 1 draws a 2 from deck 2
 player 1 discards a 0 to deck 1
-Thread-18 a.k.a. player 1 does the hand method
+Thread-14 a.k.a. player 1 does the hand method
  
 player 1 current hand is   1 2
-Thread-18 a.k.a. player 1 completed a loop
-Thread-18 a.k.a. player 1 starts a loop
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
 Test 6/7
-Thread-21 I am player 1
+Thread-17 I am player 1
 Player 1 has joined the game
-Thread-21 a.k.a. player 1 does the hand method
+Thread-17 a.k.a. player 1 does the hand method
  
 player 1 initial hand is   0 0
-Thread-18 a.k.a. player 1 hangs
-Thread-21 a.k.a. player 1 starts a loop
 player 1 draws a 1 from deck 2
 player 1 discards a 0 to deck 1
-Thread-21 a.k.a. player 1 does the hand method
+Thread-17 a.k.a. player 1 does the hand method
  
 player 1 current hand is   0 1
-Thread-21 a.k.a. player 1 completed a loop
-Thread-21 a.k.a. player 1 starts a loop
 player 1 draws a 1 from deck 2
 player 1 discards a 0 to deck 1
-Thread-18 a.k.a. player 1 hangs
-Thread-21 a.k.a. player 1 does the hand method
+Thread-17 a.k.a. player 1 does the hand method
  
 player 1 current hand is   1 1
-Thread-21 a.k.a. player 1 about to fire PlayerWonEvent
-Player 1 has fired PlayerWonEvent event
-Thread-18 a.k.a. player 1 hangs
+Thread-17 a.k.a. player 1 about to fire PlayerWonEvent
 Game won by Player 1
 Game Over!
-interrupting userInputThread
-userInputThread interrupted
-userInputThread joining...
-userInputThread joined
-
-Sending shutdown notices...
-
-
- Notifications sent out...
-
-playerWonEventHandler completed
-Thread-21 a.k.a. player 1 completed firing PlayerWonEvent
-Thread-21 a.k.a. player 1 completed a loop
-Thread-21 a.k.a. player 1 fully exited
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
+Thread-17 a.k.a. player 1 completed firing PlayerWonEvent
+Thread-17 a.k.a. player 1 does the hand method
+ 
+player 1 final hand is   1 1
+player 1 exits
 Test 7/7
-Thread-24 I am player 2
+Thread-20 I am player 2
 Player 2 has joined the game
-Thread-24 a.k.a. player 2 does the hand method
+Thread-21 I am player 1
+Player 1 has joined the game
+Thread-20 a.k.a. player 2 does the hand method
+ 
+Thread-21 a.k.a. player 1 does the hand method
  
 player 2 initial hand is   0 0
-Thread-24 a.k.a. player 2 starts a loop
+player 1 initial hand is   0 0
 player 2 draws a 2 from deck 2
 player 2 discards a 0 to deck 1
-Thread-24 a.k.a. player 2 does the hand method
-Thread-25 I am player 1
-Player 1 has joined the game
-Thread-18 a.k.a. player 1 hangs
+Thread-20 a.k.a. player 2 does the hand method
  
 player 2 current hand is   0 2
-Thread-24 a.k.a. player 2 completed a loop
-Thread-24 a.k.a. player 2 starts a loop
 player 2 draws a 2 from deck 2
 player 2 discards a 0 to deck 1
-Thread-25 a.k.a. player 1 does the hand method
- 
-Thread-24 a.k.a. player 2 does the hand method
+player 1 draws a 0 from deck 1
+Thread-20 a.k.a. player 2 does the hand method
  
 player 2 current hand is   2 2
-player 1 initial hand is   0 0
-Thread-18 a.k.a. player 1 hangs
-Thread-24 a.k.a. player 2 about to fire PlayerWonEvent
-Thread-25 a.k.a. player 1 starts a loop
-Player 2 has fired PlayerWonEvent event
+player 1 discards a 0 to deck 2
+Thread-20 a.k.a. player 2 about to fire PlayerWonEvent
 Game won by Player 2
 Game Over!
-interrupting userInputThread
-userInputThread interrupted
-userInputThread joining...
-userInputThread joined
-
-Sending shutdown notices...
-
-
- Notifications sent out...
-
-playerWonEventHandler completed
-Thread-24 a.k.a. player 2 completed firing PlayerWonEvent
-Thread-24 a.k.a. player 2 completed a loop
-Thread-24 a.k.a. player 2 fully exited
-player 1 draws a 0 from deck 1
-player 1 discards a 0 to deck 2
-Thread-25 a.k.a. player 1 does the hand method
- 
-player 1 current hand is   0 0
-Thread-25 a.k.a. player 1 completed a loop
-Thread-25 a.k.a. player 1 starts a loop
-player 1 draws a 0 from deck 1
-player 1 discards a 0 to deck 2
-Thread-25 a.k.a. player 1 does the hand method
- 
-player 1 current hand is   0 0
-Thread-25 a.k.a. player 1 completed a loop
-Thread-25 a.k.a. player 1 starts a loop
-Thread-25 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-25 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-25 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-25 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-main a.k.a. player 2 does the hand method
+Thread-20 a.k.a. player 2 completed firing PlayerWonEvent
+Thread-20 a.k.a. player 2 does the hand method
  
 player 2 final hand is   2 2
-Thread-25 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
 player 2 exits
-main a.k.a. player 1 does the hand method
+Thread-21 a.k.a. player 1 does the hand method
  
-player 1 final hand is   0 0
-player 1 exits
-Thread-25 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-25 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
-Thread-25 a.k.a. player 1 hangs
-Thread-18 a.k.a. player 1 hangs
+player 1 current hand is   0 0
+player 1 draws a 0 from deck 1
+player 1 discards a 0 to deck 2
+Thread-21 a.k.a. player 1 does the hand method
+ 
+player 1 current hand is   0 0
+
+
+
+
+No one told me the game is over...
+
+
+
+
+
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

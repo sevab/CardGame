@@ -40,6 +40,7 @@ public class Player extends Thread implements PlayerListener {
     }
 
     public void run() {
+        // TODO: unite all try-catch into one or two
         System.out.println(Thread.currentThread().getName() + " I am player " + this.playerIndex);
         try {
             logAction("Player " + this.playerIndex + " has joined the game");
@@ -52,7 +53,6 @@ public class Player extends Thread implements PlayerListener {
             this.gameOver = true; // don't wait for GameOverEvent, shut down immediately and stop bombarding CardGame with winning events 
         }
         while (!this.gameOver) {
-            System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " starts a loop");
             if (this.gamePaused) {
                 System.out.println("player " + this.playerIndex + " paused and waiting...");
                 this.cardGame.confirmPlayerState( new PlayerStateEvent(this), "pause" );
@@ -67,42 +67,46 @@ public class Player extends Thread implements PlayerListener {
             
             while(!isFull()) {
                 try {
-                    System.out.println("deck " + this.drawDeck.getDeckIndex() + " has " + this.drawDeck.getSize() + " cards left. The cards are: {" + this.drawDeck.toString() + "}. Player " + this.playerIndex);
                     push(this.drawDeck.pop()); // acquires a lock on drawDeck
                     try {
                         logAction("player " + this.playerIndex + " draws a " + top().getValue() + " from deck " + this.drawDeck.getDeckIndex());
-                        System.out.println("deck " + this.drawDeck.getDeckIndex() + " has " + this.drawDeck.getSize() + " cards left. The cards are: {" + this.drawDeck.toString() + "}. Player " + this.playerIndex);
                     } catch (IOException e) {}
                 } catch (StackUnderflowException e) { // wait if draw stack is empty:
-                    System.out.println("deck " + this.drawDeck.getDeckIndex() + " has " + this.drawDeck.getSize() + " cards left. The cards are: {" + this.drawDeck.toString() + "}. Player " + this.playerIndex);
-                    System.out.println("deck " + this.discardDeck.getDeckIndex() + " has " + this.discardDeck.getSize() + " cards left. The cards are: {" + this.discardDeck.toString() + "}. Player " + this.playerIndex);
                     // System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " hangs");
                     try {
                         sleep(1);
                         if (this.gameOver) { // in case another player leaves and the draw deck is empty, avoid getting stuck in an infinite loop waiting for a card to appear 
-                            System.out.println("\n\n\n\nNo one told me the game is over...\n\n\n\n\n");
+                            // DRY-out
+                            try {
+                                logAction("player " + this.playerIndex + " final hand is " + getHandAsString());
+                                logAction("player " + this.playerIndex + " exits");
+                                firePlayerTerminatedEvent();
+                            } catch(IOException exc) {}
                             return;   
                         }
                     } catch (InterruptedException ex) {  }
                 }
             }
-            System.out.println("deck " + this.discardDeck.getDeckIndex() + " has " + this.discardDeck.getSize() + " cards left. The cards are: {" + this.discardDeck.toString() + "}. Player " + this.playerIndex);
             Card discardedCard = discardACard();
             this.discardDeck.unshift(discardedCard); // acquire a lock on discardDeck
             try {
                 logAction("player " + this.playerIndex + " discards a " + discardedCard.getValue() + " to deck " + this.discardDeck.getDeckIndex());
                 logAction("player " + this.playerIndex + " current hand is " + getHandAsString());
-                System.out.println("deck " + this.discardDeck.getDeckIndex() + " has " + this.discardDeck.getSize() + " cards left. The cards are: {" + this.discardDeck.toString() + "}. Player " + this.playerIndex);
             } catch (IOException e) {}
             if (hasWinningCombo()) {
-                System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " about to fire PlayerWonEvent");
+                // System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " about to fire PlayerWonEvent");
                 firePlayerWonEvent( new PlayerWonEvent(this) );
-                System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " completed firing PlayerWonEvent");
+                // System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " completed firing PlayerWonEvent");
                 this.gameOver = true; // don't wait for GameOverEvent, shut down immediately and stop bombarding CardGame with winning events
             }
-            System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " completed a loop");    
         }
-        System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " fully exited");
+        try {
+            // DRY-out
+            logAction("player " + this.playerIndex + " final hand is " + getHandAsString());
+            logAction("player " + this.playerIndex + " exits");
+            firePlayerTerminatedEvent();
+        } catch(IOException e) {}
+        // print out this.cardsArray
     }
 
     Card discardACard() {
@@ -126,20 +130,20 @@ public class Player extends Thread implements PlayerListener {
 
     void firePlayerWonEvent(PlayerWonEvent event) {
         // check if gameOver or fire anyway and maybe be the first or get ignored if gameover? yeah, probably no need to check
-        System.out.println("Player " + this.getPlayerIndex() + " has fired PlayerWonEvent event");
+        // System.out.println("Player " + this.getPlayerIndex() + " has fired PlayerWonEvent event");
+        // DRY: this.cardGame.playerWonEventHandler(new PlayerWonEvent());
         this.cardGame.playerWonEventHandler(event);
+    }
+    void firePlayerTerminatedEvent() {
+        this.cardGame.confirmPlayerTerminated(new PlayerStateEvent(this));
     }
 
     public void gameOverEventHandler(GameOverEvent event) {
         // verify the source is the same as this.cardGame? But who else...
         // Object source = event.getSource(); if (source instanceof CardGame)
+        // synchronize?
         this.gameOver = true;
         // move code below after the while(!gameOver) loop
-        try {
-            logAction("player " + this.playerIndex + " final hand is " + getHandAsString());
-            logAction("player " + this.playerIndex + " exits");
-        } catch(IOException e) {}
-        // print out this.cardsArray
     }
 
     public void pausePlayerEventHandler(GameStateEvent event) {
@@ -218,7 +222,7 @@ public class Player extends Thread implements PlayerListener {
         return this.cardsArray[this.top - 1].getCopy();
     }
     String getHandAsString() {
-        System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " does the hand method");    
+        // System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " does the hand method");    
         if (this.isEmpty())
             throw new StackUnderflowException(); // or just return an empty string?
         String hand = " "; // why space?
@@ -229,6 +233,7 @@ public class Player extends Thread implements PlayerListener {
         }
         return hand;
     }
+    // no need to declare IOExceptio if we are catching it. In fact, dry out it here, instead of doing it above.
     private void logAction(String action) throws IOException {
         System.out.println(action);
         Helper.appendLineToFile( output_file, action);
