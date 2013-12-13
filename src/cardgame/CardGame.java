@@ -28,13 +28,12 @@ public class CardGame extends Thread implements CardGameListener {
     private int playersTerminated;
     private volatile boolean inIntermediateState;
     private volatile boolean gamePaused = false;
-
+    private int strategy;
+    long startTime;
 
 
 
     CardGame(int numberOfPlayers, int handSize, CardDeck initialDeck) {
-    	//FEATURE: validate deck if it's possible to win with that deck given player num? (e.g. 1 player && num of preffered cards < k)
-        validateDeck(initialDeck, numberOfPlayers, handSize); // numberOfPlayers & handSize are validated in the main() method
         this.initialDeck = initialDeck;
         this.numberOfPlayers = numberOfPlayers;
         this.handSize = handSize;
@@ -46,25 +45,21 @@ public class CardGame extends Thread implements CardGameListener {
         this.playersConfirmed = 0;
         this.playersTerminated = 0;
         this.inIntermediateState = false;
+        this.strategy = 1; // default to 1
     }
 
-    // do we join the thread or explicitly stop it once the run() completes?
 	public void run() {
-        System.out.println(Thread.currentThread().getName() + " I am the CardGame");
+        this.startTime = System.nanoTime();
         for (int i=0; i < this.numberOfPlayers; i++) {
-        	// each deck should be able to hold at least twice the number of cards
-        	// research if can minimize this furhter
-        	cardDecks[i] = new CardDeck(i+1, this.handSize*2);
+        	// each deck should be able to hold at least 4 times the number of cards
+        	cardDecks[i] = new CardDeck(i+1, this.handSize*4);
         }
         for (int i=0; i < this.numberOfPlayers; i++) {
-            // maybe a better way to register the game would be through the player.addGame(CardGame game) method, rather than passing directly? Same with decks? More readable.
         	// handSize+1 because player should be able to hold k+1 cards
         	// cardDecks[(i+this.numberOfPlayers-1)%this.numberOfPlayers] gives a unique reference to a cardDeck in a circular fashion
-        	// TODO: store strategy in this.strategy
-        	this.players[i] = new Player(this, i+1, this.handSize+1, 1, cardDecks[i], cardDecks[(i+this.numberOfPlayers-1)%this.numberOfPlayers]);
+        	this.players[i] = new Player(this, i+1, this.handSize+1, this.strategy, cardDecks[i], cardDecks[(i+this.numberOfPlayers-1)%this.numberOfPlayers]);
         }
         System.out.println("Distributing cards...");
-        // distribute cards among players
         for (int i=0; i < this.handSize; i++) {
         	for (int j=0; j < this.numberOfPlayers; j++) {
         		this.players[j].push(this.initialDeck.pop());
@@ -81,30 +76,24 @@ public class CardGame extends Thread implements CardGameListener {
     		player.start();
     }
     public synchronized void playerWonEventHandler(PlayerWonEvent event) {
-		// make sure all subsequent PlayerWonEvents aren't accepted or do change the state of the game
 		if (!this.gameOver) {
 			Object winningPlayer = event.getSource();
 			if (winningPlayer instanceof Player) {
 				this.gameOver = true;
                 this.winner = (Player) winningPlayer;
 		        System.out.println("Game won by Player " + ((Player) winningPlayer).getPlayerIndex() );
-			    // System.out.println("Game Over!"); // TODO: print gameover once it's trully over?
 			}
-            // synchronize?
-            
+
             this.userInputThread.interrupt();
             try {
                 this.userInputThread.join();
             } catch (InterruptedException ex) {}
-            // System.out.println("\nSending shutdown notices...\n");
 		    for (Player player : this.players) {
                 synchronized(player) {
                     player.gameOverEventHandler( new GameOverEvent(this) );    
                 }   
             }
-            // System.out.println("\n Notifications sent out...\n");
 		}
-        // System.out.println("playerWonEventHandler completed");
     }
 
     // combine pauseGame + resumeGame into one
@@ -129,22 +118,7 @@ public class CardGame extends Thread implements CardGameListener {
         }   
     }
 
-    // void pauseGame()  {pauseOrResumeGame("resume");}
-    // void resumeGame() {pauseOrResumeGame("pause");}
-    // void pauseOrResumeGame(String action) {
-    //     Str str = null;
-    //     switch (action) {
-    //         case "pause" : str = (this.gamePaused) ?
-    //                         "Game is already paused. Press r+Enter to resume." :
-    //                         "Pausing game..."; break;
-    //         case "resume": str = (!this.gamePaused) ?
-    //                         "Game is already running. Press p+Enter to pause." :
-    //                         "Resuming game..."; break;
-    //     }
-    //     System.out.println(str);
-    //     for (Player player : this.players)
-    //         player.resumePlayerEventHandler( new GameStateEvent(this) );
-    // }
+
     // syncrhonizing incrementation of playersConfirmed
     synchronized void confirmPlayerState( PlayerStateEvent event, String state ) {
         // verify String state corresponds to the current this.gamePaused state?
@@ -173,11 +147,10 @@ public class CardGame extends Thread implements CardGameListener {
             for (int i=0; i < this.numberOfPlayers; i++) {
                 deck_state = "deck " + this.cardDecks[i].getDeckIndex() + " contains cards: " + this.cardDecks[i].toString();
                 output_file = new File("game_output/deck" + this.cardDecks[i].getDeckIndex() + "_output.txt");
-                try {
-                    Helper.appendLineToFile( output_file, deck_state );
-                } catch (IOException e) {}
+                Helper.appendLineToFile( output_file, deck_state );
             }
-            System.out.println("Game Over!"); // TODO: print gameover once it's trully over?
+            System.out.println("Game Over!");
+            System.out.println("\n\n\n\n\n\n\n"+ (System.nanoTime() - this.startTime) + "\n\n\n\n\n\n\n");
 
         }
     }
@@ -192,10 +165,6 @@ public class CardGame extends Thread implements CardGameListener {
         this.userInputThread.start();
     }
 
-    void validateDeck(CardDeck deck, int numberOfPlayers, int handSize) {
-    	if ( deck.getSize() < 2 * numberOfPlayers * handSize)
-    		throw new RuntimeException("Insufficient number of cards in the initial deck. Please, import a larger deck");
-    }
     boolean isOver() {
         return this.gameOver;
     }
@@ -203,6 +172,10 @@ public class CardGame extends Thread implements CardGameListener {
         if (isOver())
             return this.winner;
         throw new RuntimeException("No winner yet - The game hasn't ended yet.");
+    }
+
+    void setStrategy(int strategy) {
+        this.strategy = strategy;
     }
 
     // TODO: remove unfixed exceptions
@@ -215,6 +188,7 @@ public class CardGame extends Thread implements CardGameListener {
         int numberOfPlayers = -1;
         int handSize = -1;
         try {
+            // throws NumberFormatException if handSize and numberOfPlayers are not strings
             numberOfPlayers = Integer.parseInt(args[0]);
             handSize = Integer.parseInt(args[1]);
             if (numberOfPlayers < 1 || handSize < 1) // Validate args are larger than 1
@@ -225,17 +199,46 @@ public class CardGame extends Thread implements CardGameListener {
             System.exit(1);
         }
 
+        // Ask for strategy
+        int strategy = -1;
+        while (strategy != 1 && strategy != 2) {        
+            System.out.print("Please choose either strategy 1 or 2: ");
+            try {
+                strategy = Integer.parseInt((new BufferedReader(new InputStreamReader(System.in))).readLine());
+                if (strategy != 1 && strategy != 2) {
+                    System.out.println("That's an incorrect value, please enter number 1 or 2 for your strategy.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Number Format Error: please enter number 1 or 2 for your strategy ");
+            } catch (IOException e) {
+                System.out.println("Oops..somethign went wrong.");
+                System.exit(1);
+            }
+        }
+
         // Get & validate files
         File f = Helper.readFileFromCommandLine();
-        CardDeck initialDeck = Helper.fileToCardDeck(f);
+        CardDeck initialDeck = null;
+        try {
+            initialDeck = Helper.fileToCardDeck(f, numberOfPlayers, handSize);
+        } catch (NumberFormatException e) {
+            System.err.println("\nCard Deck Error:\n" + e.getMessage());
+            System.exit(1);   
+        }
         Helper.createNewDirectory("game_output");
         System.out.println("Starting the game...");
         System.out.println("\n\nWhile the game is running press p+Enter to pause the game or r+Enter to resume.\nThis message will disappear in less than 1 sec.\n\n");
         // try { Thread.sleep(1000); } catch (InterruptedException e) {}
         CardGame game = new CardGame(numberOfPlayers, handSize, initialDeck);
+        game.setStrategy(strategy);
+        // ask and validate strategy number
+        
+
         game.start();
         game.startInputThread();
 	}
+
+
 
 
     private class UserInputThread implements Runnable {
@@ -253,11 +256,10 @@ public class CardGame extends Thread implements CardGameListener {
                     }
                 }
                 System.out.print("Press p+Enter to pause or r+Enter to resume: ");
-                try { // move String userInput to constructor?
-                    // does splitting this into several bits allows multiple-line input?
+                try {
                     br = (new BufferedReader(new InputStreamReader(System.in)));
                     try {
-                        // wait until we have data to complete a readLine()
+                        // wait until there's data to complete readLine()
                         while (!br.ready()) {
                           Thread.sleep(200);
                         }
@@ -265,7 +267,7 @@ public class CardGame extends Thread implements CardGameListener {
                     } catch (InterruptedException e) {
                         return;
                     }
-                    // synchronized()?
+                    // synchronized()? what if a player is reporting something meanwhile? There's nothing for him to report (except wining or exiting)
                     switch ( userInput ) {
                         case "p" :  inIntermediateState = true;
                                     pauseGame(); break;
@@ -275,12 +277,10 @@ public class CardGame extends Thread implements CardGameListener {
                     }
 
                 } catch (IOException e) {
-                    System.out.println("Oops..somethign went wrong in UserInputThread.run().");
+                    System.out.println("Oops..somethign went wrong in UserInputThread.");
                     System.exit(1);
                 }                
             }
         }
     }
-
-
 }

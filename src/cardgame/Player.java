@@ -1,13 +1,10 @@
-// TODO: decide what needs to be synchronized and what's not
-// TODO: may need to implement addListener & removeListener
-//       in order to be able to de-refenrence the listener (i.e. game).
-//       Though the players will terminate before the game's end, so maybe no need?
 package cardgame;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Arrays;
 
 
 /**
@@ -20,14 +17,14 @@ public class Player extends Thread implements PlayerListener {
     private int top;
     private int playerIndex;
     private CardGame cardGame;
-    private volatile boolean gameOver = false; // volatile?
-    private volatile boolean gamePaused = false; // volatile?
+    private volatile boolean gameOver = false;
+    private volatile boolean gamePaused = false;
     private CardDeck discardDeck;
     private CardDeck drawDeck;
     private int strategy;
     private File output_file;
+    private Card preferredCard;
     
-    // FIXME: volatile? Yes or No
     Player(CardGame cardGame, int playerIndex, int handSize, int strategy, CardDeck drawDeck, CardDeck discardDeck) {
         this.playerIndex = playerIndex;
         this.cardsArray = new Card[handSize];   
@@ -36,120 +33,130 @@ public class Player extends Thread implements PlayerListener {
         this.discardDeck = discardDeck;
         this.drawDeck = drawDeck;
         this.strategy = strategy;
+        // !!!!!! DELETE IN PRODUCTION:
+        this.preferredCard = new Card(this.playerIndex);
         this.output_file = new File("game_output/player" + playerIndex + "_output.txt");
     }
 
     public void run() {
-        // TODO: unite all try-catch into one or two
-        System.out.println(Thread.currentThread().getName() + " I am player " + this.playerIndex);
-        try {
-            logAction("Player " + this.playerIndex + " has joined the game");
-            logAction("player " + this.playerIndex + " initial hand is " + getHandAsString());
-        } catch (IOException e) {}
-        // make sure initialised properly (e.g. have all cards)?
-        // DRY TODO: extract into verifyIfWon() method
-        if (hasWinningCombo()) { // set game over to false? but still wait to get the command from the game
-            firePlayerWonEvent( new PlayerWonEvent(this) );
-            this.gameOver = true; // don't wait for GameOverEvent, shut down immediately and stop bombarding CardGame with winning events 
-        }
+        logAction("Player " + this.playerIndex + " has joined the game");
+        logAction("player " + this.playerIndex + " initial hand is " + getHandAsString());
+        setPrefferedCard();
+        verifyIfWon();
         while (!this.gameOver) {
+            // DRY: verifyIfPaused()?
             if (this.gamePaused) {
                 System.out.println("player " + this.playerIndex + " paused and waiting...");
                 this.cardGame.confirmPlayerState( new PlayerStateEvent(this), "pause" );
-                // syncronized this or syncronized the game?
-                // also, this.wait , or this.cardGame.game?
                 synchronized (this) {
-                    try { wait(); } catch (InterruptedException e) {}
+                    try { this.wait(); } catch (InterruptedException e) {}
                 }
                 System.out.println("player " + this.playerIndex + " resumed...");
                 this.cardGame.confirmPlayerState( new PlayerStateEvent(this), "resume" );
             }
-            
+            // draw a card
             while(!isFull()) {
                 try {
                     push(this.drawDeck.pop()); // acquires a lock on drawDeck
-                    try {
-                        logAction("player " + this.playerIndex + " draws a " + top().getValue() + " from deck " + this.drawDeck.getDeckIndex());
-                    } catch (IOException e) {}
+                    logAction("player " + this.playerIndex + " draws a " + top().getValue() + " from deck " + this.drawDeck.getDeckIndex());
                 } catch (StackUnderflowException e) { // wait if draw stack is empty:
-                    // System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " hangs");
-                    try {
-                        sleep(1);
-                        if (this.gameOver) { // in case another player leaves and the draw deck is empty, avoid getting stuck in an infinite loop waiting for a card to appear 
-                            // DRY-out
-                            try {
-                                logAction("player " + this.playerIndex + " final hand is " + getHandAsString());
-                                logAction("player " + this.playerIndex + " exits");
-                                firePlayerTerminatedEvent();
-                            } catch(IOException exc) {}
-                            return;   
-                        }
-                    } catch (InterruptedException ex) {  }
+                    try { sleep(1); } catch (InterruptedException ex) {}
+                    if (this.gameOver) { // in case another player leaves and the draw deck is empty, avoid getting stuck in an infinite loop waiting for a card to appear 
+                        firePlayerTerminatedEvent();
+                        return;
+                    }
                 }
             }
-            Card discardedCard = discardACard();
+            // discard a card
+            Card discardedCard = discardACard(); // how come no exception is thrown that descardedCard has been defined already?
             this.discardDeck.unshift(discardedCard); // acquire a lock on discardDeck
-            try {
-                logAction("player " + this.playerIndex + " discards a " + discardedCard.getValue() + " to deck " + this.discardDeck.getDeckIndex());
-                logAction("player " + this.playerIndex + " current hand is " + getHandAsString());
-            } catch (IOException e) {}
-            if (hasWinningCombo()) {
-                // System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " about to fire PlayerWonEvent");
-                firePlayerWonEvent( new PlayerWonEvent(this) );
-                // System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " completed firing PlayerWonEvent");
-                this.gameOver = true; // don't wait for GameOverEvent, shut down immediately and stop bombarding CardGame with winning events
-            }
+            logAction("player " + this.playerIndex + " discards a " + discardedCard.getValue() + " to deck " + this.discardDeck.getDeckIndex());
+            logAction("player " + this.playerIndex + " current hand is " + getHandAsString());
+            verifyIfWon();
         }
-        try {
-            // DRY-out
-            logAction("player " + this.playerIndex + " final hand is " + getHandAsString());
-            logAction("player " + this.playerIndex + " exits");
-            firePlayerTerminatedEvent();
-        } catch(IOException e) {}
-        // print out this.cardsArray
+        firePlayerTerminatedEvent();
+    }
+
+
+    void setPrefferedCard(){
+        if (this.strategy == 1) {
+            this.preferredCard = new Card(this.playerIndex);
+        } else if (this.strategy == 2) {
+            this.preferredCard = mostCommonCard();
+        }
     }
 
     Card discardACard() {
         if (!isFull()) // TODO: move to the run method?
             throw new RuntimeException("Can only discard cards when the hand is full.");
         Card cardToDiscard = null;
-        if (this.strategy == 1) {
-            // unshift an unpreferred card in a FIFO order:
-            for (int i=0; i < this.top; i++) {
-                // if card is not preferred or it is not last (in which case we don't care the card's value since we'll need to get rid of one card anyways)
-                if ( !preferresCard(this.cardsArray[i]) || (i == this.top-1)) {
-                    cardToDiscard = delete_at(i).getCopy();
-                    break;
-                }
+        computePreferredCard();
+        // to avoid game stalling unshift an unpreferred card in a FIFO order:
+        for (int i=0; i < this.top; i++) {
+            // if card is not preferred or it is not last (in which case we don't care the card's value since we'll need to get rid of one card anyways)
+            if ( !this.cardsArray[i].equals(this.preferredCard) || (i == this.top-1)) {
+                cardToDiscard = delete_at(i).getCopy();
+                break;
             }
-        } else if (this.strategy == 2) {
-            throw new RuntimeException("Strategy 2 is not implemented yet.");
         }
         return cardToDiscard;
     }
 
-    void firePlayerWonEvent(PlayerWonEvent event) {
-        // check if gameOver or fire anyway and maybe be the first or get ignored if gameover? yeah, probably no need to check
-        // System.out.println("Player " + this.getPlayerIndex() + " has fired PlayerWonEvent event");
-        // DRY: this.cardGame.playerWonEventHandler(new PlayerWonEvent());
-        this.cardGame.playerWonEventHandler(event);
+    void computePreferredCard() {
+        if (this.strategy == 2) {
+            // recompute preferredCard if the newly drawn card is different from the last preferredCard
+            if (!top().equals(this.preferredCard)) {
+                this.preferredCard = mostCommonCard();
+            }
+        }
+    }
+
+    Card mostCommonCard() {
+        Card previous = this.cardsArray[0];
+        Card mostCommonCard = this.cardsArray[0];
+        int count = 1;
+        int maxCount = 1;
+
+        for (int i = 1; i < this.top; i++) {
+            if (this.cardsArray[i].equals(previous)){
+                count++;
+            } else {
+                if (count > maxCount) {
+                    mostCommonCard = this.cardsArray[i-1];
+                    maxCount = count;
+                }
+                previous = this.cardsArray[i];
+                count = 1;
+            }
+        }
+        if (count > maxCount) {
+            return this.cardsArray[this.top-1];
+        } else {
+            return mostCommonCard;
+        }
+    }
+
+
+    void verifyIfWon() {
+        if (hasWinningCombo())
+            firePlayerWonEvent();
+    }
+    void firePlayerWonEvent() {
+        this.gameOver = true; // don't wait for GameOverEvent, shut down immediately and stop bombarding CardGame with winning events
+        this.cardGame.playerWonEventHandler( new PlayerWonEvent(this) );
     }
     void firePlayerTerminatedEvent() {
+        logAction("player " + this.playerIndex + " final hand is " + getHandAsString());
+        logAction("player " + this.playerIndex + " exits");
         this.cardGame.confirmPlayerTerminated(new PlayerStateEvent(this));
     }
 
     public void gameOverEventHandler(GameOverEvent event) {
-        // verify the source is the same as this.cardGame? But who else...
-        // Object source = event.getSource(); if (source instanceof CardGame)
-        // synchronize?
         this.gameOver = true;
-        // move code below after the while(!gameOver) loop
     }
 
     public void pausePlayerEventHandler(GameStateEvent event) {
-        synchronized (this) {
-            this.gamePaused = true;    
-        }
+        this.gamePaused = true;
         System.out.println("player " + this.playerIndex + " is pausing... ");
     }
 
@@ -196,17 +203,15 @@ public class Player extends Thread implements PlayerListener {
         if (this.top != this.cardsArray.length-1 ) // only full-1 hands are accepted
             return false;
         boolean flag = true;
-        for(int i = 0; i < this.top && flag; i++) {
-            if (!preferresCard(this.cardsArray[i])) {
+        for(int i = 1; i < this.top; i++) {
+            if(!this.cardsArray[0].equals(this.cardsArray[i])) {
                 flag = false;
                 break;
             }
         }
         return flag;
     }
-    boolean preferresCard(Card card) {
-        return (card.getValue() == this.playerIndex);
-    }
+
     boolean isFull() {
         return (this.top == this.cardsArray.length);
     }
@@ -234,7 +239,7 @@ public class Player extends Thread implements PlayerListener {
         return hand;
     }
     // no need to declare IOExceptio if we are catching it. In fact, dry out it here, instead of doing it above.
-    private void logAction(String action) throws IOException {
+    private void logAction(String action) {
         System.out.println(action);
         Helper.appendLineToFile( output_file, action);
     }

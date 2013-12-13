@@ -204,6 +204,108 @@ public class PlayerTest {
         Assert.assertEquals(1, player.getSize());
 
     }
+    @Test
+    public void should_discard_cards_as_expected_according_to_strategy_2() {
+        // should not allow discarding cards when not full
+        CardDeck initialCardDeck = new CardDeck(0,0);
+        CardDeck discardDeck = new CardDeck(1,0);
+        CardDeck drawDeck = discardDeck; //= new CardDeck(0);
+        int playerIndex = 1;
+        int handSize = 3;
+        int strategy = 2;
+        CardGame testGame = new CardGame(0, 0, initialCardDeck);
+        Player player = new Player(testGame, playerIndex, handSize, strategy, drawDeck, discardDeck);
+
+        player.push(new Card(0));
+        player.push(new Card(1));
+        try {
+            player.discardACard();
+            fail( "Missing exception" );
+        } catch (Exception e){
+            assertTrue(e.getMessage().equals("Can only discard cards when the hand is full."));
+        }
+        // should discard a preffered card when full of preffered cards
+        player.push(new Card(1));
+        // System.out.println(player.discardACard());
+        player.setPrefferedCard();
+        Assert.assertEquals(3, player.getSize());
+        Assert.assertEquals(0, player.discardACard().getValue());
+        Assert.assertEquals(2, player.getSize());
+        // should discard last card when no prefered cards found (because it will have to go through all cards to see that there're no)
+        player = new Player(testGame, playerIndex, handSize, strategy, drawDeck, discardDeck);
+        for (int i=0; i<3; i++)
+            player.push(new Card(i));
+        player.setPrefferedCard();
+        Assert.assertEquals(3, player.getSize());
+        int testCardVal = player.discardACard().getValue();
+        // System.out.println("discarded card val: " + testCardVal);
+        Assert.assertEquals(1, testCardVal);
+        Assert.assertEquals(2, player.getSize());
+        // should discard unpreferred card
+        player = new Player(testGame, playerIndex, handSize, strategy, drawDeck, discardDeck);
+        player.push(new Card(1));
+        player.push(new Card(2));
+        player.push(new Card(2));
+        player.setPrefferedCard();
+        Assert.assertEquals(3, player.getSize());
+        Assert.assertEquals(1, player.discardACard().getValue());
+        Assert.assertEquals(2, player.getSize());
+        // should discard unpreferred card irregardles of its location
+        player = new Player(testGame, playerIndex, handSize, strategy, drawDeck, discardDeck);
+        player.push(new Card(2));
+        player.push(new Card(2));
+        player.push(new Card(1));
+        player.setPrefferedCard();
+        Assert.assertEquals(3, player.getSize());
+        System.out.println("\n\n\ntarget test start\n");
+        int testCardVal3 = player.discardACard().getValue();
+        System.out.println("discarded card val: " + testCardVal3);
+        Assert.assertEquals(1, testCardVal3);
+        System.out.println("\n\n\ntarget test end\n");
+        Assert.assertEquals(2, player.getSize());
+        // if two pairs of prefferedCards, should discard the last detected
+        player = new Player(testGame, playerIndex, 4, strategy, drawDeck, discardDeck);
+        player.push(new Card(2));
+        player.push(new Card(2));
+        player.push(new Card(1));
+        player.push(new Card(1));
+        player.setPrefferedCard();
+        Assert.assertEquals(4, player.getSize());
+        Assert.assertEquals(1, player.discardACard().getValue());
+        Assert.assertEquals(3, player.getSize());
+
+        // // same test, different combo (useless test):
+        // player = new Player(testGame, playerIndex, handSize, strategy, drawDeck, discardDeck);
+        // player.push(new Card(1));
+        // player.push(new Card(1));
+        // player.push(new Card(2));
+        // Assert.assertEquals(3, player.getSize());
+        // Assert.assertEquals(2, player.discardACard().getValue());
+        // Assert.assertEquals(2, player.getSize());
+        // // same test, different combo (useless test):
+        // player = new Player(testGame, playerIndex, handSize, strategy, drawDeck, discardDeck);
+        // player.push(new Card(1));
+        // player.push(new Card(9));
+        // player.push(new Card(1));
+        // Assert.assertEquals(3, player.getSize());
+        // Assert.assertEquals(9, player.discardACard().getValue());
+        // Assert.assertEquals(2, player.getSize());
+        // // same test, different combo (useless test):
+        // player = new Player(testGame, playerIndex, handSize, strategy, drawDeck, discardDeck);
+        // player.push(new Card(1));
+        // player.push(new Card(1));
+        // player.push(new Card(8));
+        // Assert.assertEquals(3, player.getSize());
+        // Assert.assertEquals(8, player.discardACard().getValue());
+        // Assert.assertEquals(2, player.getSize());
+        // // try discarding from a 1-size player (+1 interim slot)
+        // player = new Player(testGame, playerIndex, 2, strategy, drawDeck, discardDeck);
+        // player.push(new Card(1));
+        // player.push(new Card(2));
+        // Assert.assertEquals(2, player.getSize());
+        // Assert.assertEquals(2, player.discardACard().getValue());
+        // Assert.assertEquals(1, player.getSize());
+    }
     // public void should_wait_when_a_deck_is_empty
     @Test
     public void should_wait_and_try_again_if_a_deck_is_empty_when_discarding() {
@@ -244,20 +346,20 @@ public class PlayerTest {
         Player player = new Player(testGame, playerIndex, handSize, strategy, drawDeck, discardDeck);
 
         player.push(new Card(0));
-        player.push(new Card(0));
+        player.push(new Card(1));
 
         player.start();
         Assert.assertEquals(2, player.getSize());
         Assert.assertEquals(0, discardDeck.getSize());
         assertFalse(testGame.isOver());
         drawDeck.push(new Card(1));
-        drawDeck.push(new Card(1));
+        // drawDeck.push(new Card(1));
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {}
         Assert.assertEquals(2, player.getSize());
         Assert.assertEquals(0, drawDeck.getSize()); // cards taken
-        Assert.assertEquals(2, discardDeck.getSize());
+        Assert.assertEquals(1, discardDeck.getSize());
         assertTrue(testGame.isOver());
     }
     @Test
@@ -274,10 +376,10 @@ public class PlayerTest {
         Player player2 = new Player( testGame, 1, handSize, strategy, discardDeck, drawDeck );
 
         // initialize both players with unrelated cards
-        player1.push(new Card(0));
-        player1.push(new Card(0));
-        player2.push(new Card(0));
-        player2.push(new Card(0));
+        player1.push(new Card(1));
+        player1.push(new Card(2));
+        player2.push(new Card(3));
+        player2.push(new Card(4));
         
         // start both players
         player1.start();
@@ -290,7 +392,7 @@ public class PlayerTest {
         Assert.assertEquals(0, drawDeck.getSize());
         assertFalse(testGame.isOver());
 
-        // push two cards preffered only by player2
+        // push two same cards
         drawDeck.push(new Card(2));
         drawDeck.push(new Card(2));
 

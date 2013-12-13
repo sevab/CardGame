@@ -10,7 +10,6 @@ public class CardDeck {
     private int top;
     private int deckIndex;
     
-    // FIXME: volatile? Yes or No
     CardDeck(int deckIndex, int sizeOfCardDeck) {
          this.deckIndex = deckIndex;
          this.cardsArray = new Card[sizeOfCardDeck];   
@@ -66,7 +65,7 @@ public class CardDeck {
     // test
     public String toString() {
         String result = "";
-        if (this.isEmpty()) return result;
+        if (this.isEmpty()) return "none";
         for (int i=0; i<this.top; i++)
             result = result + this.cardsArray[i].getValue() + " ";
         return result;

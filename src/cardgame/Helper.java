@@ -29,20 +29,20 @@ public class Helper {
         return lines;
     }
 
-    static void appendLineToFile(File file, String line) throws IOException {
+    static void appendLineToFile(File file, String line) {
     	// test: should create file if doesn't exist
     	// test: should_append_line
 
-        // try {
         //     BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
-        //     bw.write(line+"\n");
-        //     bw.close();
-        // } catch (IOException e) {}
+        //     bw.write(line+"\n"); bw.close();
         try {
 			PrintWriter out = new PrintWriter(new FileWriter(file, true));
 		    out.println( line );
 		    out.close();
-        } catch(IOException e) {}	    
+        } catch(IOException e) {
+            System.out.println("Oops..somethign went wrong while writing a file.");
+            System.exit(1);
+        }
     }
 
     static File readFileFromCommandLine() {
@@ -64,12 +64,27 @@ public class Helper {
         return f;
     }
 
-    static CardDeck fileToCardDeck(File f) throws FileNotFoundException, IOException {
+    // reads file to a CardDeck and validates file values all along
+    static CardDeck fileToCardDeck(File f, int numberOfPlayers, int handSize) throws FileNotFoundException, IOException {
         Scanner scanner = new Scanner(f);
-        CardDeck initialDeck = new CardDeck(0, linesInAFile(f));
-        while(scanner.hasNextInt()){
-           initialDeck.push(new Card(scanner.nextInt()));
-           // System.out.println("initial deck top: " + initialDeck.top().getValue());
+        int linesInAFile = linesInAFile(f);
+        int deckSize = 2 * numberOfPlayers * handSize;
+        if ( linesInAFile < deckSize)
+            throw new RuntimeException("Insufficient number of cards in the initial deck. Please, import a larger deck");
+        CardDeck initialDeck = new CardDeck(0, linesInAFile);
+
+        int i = 0;
+        int num;
+        while (scanner.hasNext() && i < deckSize) {
+            if (!scanner.hasNextInt())
+                throw new NumberFormatException("It looks like the card deck you supplied contains non-numeric characters. \nPlease ensure that your card deck consists only of positive integers.");
+            num = scanner.nextInt();
+            if (num < 0)
+                throw new NumberFormatException("It looks like the card deck you supplied contains negative integers. \nPlease ensure that your card deck consists only of positive integers.");
+            if (num > numberOfPlayers)
+                throw new NumberFormatException("It looks like the card deck you supplied contains an integer value exceeding the number of players you specified. \nIt is legal for the face value of a card to exceed number of players.");
+            initialDeck.push(new Card(num));
+            i++;
         }
         scanner.close();
         return initialDeck;

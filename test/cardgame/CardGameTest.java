@@ -76,4 +76,10 @@ public class CardGameTest {
     // public void should_end_at_some_point_when_given_enough_equal_cards_for_someone_to_win
     
 
+    // test that expected number of players have expected number of cards? No. Should be part of game testing
+    // test if bigger cardDeck size might be required on initialization with more players / cards.
+    //      But should be ok, considering a player will probably do at MAX 2-3 more rounds before receiving a message
+
+    // test that after a player wins all subsequent PlayerWonEvents aren't accepted or do change the state of the game
+
 }
