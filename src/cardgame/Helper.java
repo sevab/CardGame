@@ -30,11 +30,6 @@ public class Helper {
     }
 
     static void appendLineToFile(File file, String line) {
-    	// test: should create file if doesn't exist
-    	// test: should_append_line
-
-        //     BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
-        //     bw.write(line+"\n"); bw.close();
         try {
 			PrintWriter out = new PrintWriter(new FileWriter(file, true));
 		    out.println( line );

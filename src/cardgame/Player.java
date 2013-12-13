@@ -4,13 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Arrays;
 
 
-/**
- *
- * @author xxx
- */
 public class Player extends Thread implements PlayerListener {
 
     private Card[] cardsArray;
@@ -33,7 +28,6 @@ public class Player extends Thread implements PlayerListener {
         this.discardDeck = discardDeck;
         this.drawDeck = drawDeck;
         this.strategy = strategy;
-        // !!!!!! DELETE IN PRODUCTION:
         this.preferredCard = new Card(this.playerIndex);
         this.output_file = new File("game_output/player" + playerIndex + "_output.txt");
     }

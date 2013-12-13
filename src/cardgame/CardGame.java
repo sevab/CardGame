@@ -9,10 +9,6 @@ import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Scanner;
 
-/**
- *
- * @author sevabaskin
- */
 public class CardGame extends Thread implements CardGameListener {
 
 	private final int numberOfPlayers;
@@ -52,7 +48,7 @@ public class CardGame extends Thread implements CardGameListener {
         this.startTime = System.nanoTime();
         for (int i=0; i < this.numberOfPlayers; i++) {
         	// each deck should be able to hold at least 4 times the number of cards
-        	cardDecks[i] = new CardDeck(i+1, this.handSize*4);
+        	cardDecks[i] = new CardDeck(i+1, this.handSize*this.numberOfPlayers);
         }
         for (int i=0; i < this.numberOfPlayers; i++) {
         	// handSize+1 because player should be able to hold k+1 cards
@@ -120,7 +116,7 @@ public class CardGame extends Thread implements CardGameListener {
 
 
     // syncrhonizing incrementation of playersConfirmed
-    synchronized void confirmPlayerState( PlayerStateEvent event, String state ) {
+    public synchronized void confirmPlayerState( PlayerStateEvent event, String state ) {
         // verify String state corresponds to the current this.gamePaused state?
         this.playersConfirmed++;
         if (this.playersConfirmed == this.numberOfPlayers) {            
@@ -150,6 +146,7 @@ public class CardGame extends Thread implements CardGameListener {
                 Helper.appendLineToFile( output_file, deck_state );
             }
             System.out.println("Game Over!");
+            // DELETE
             System.out.println("\n\n\n\n\n\n\n"+ (System.nanoTime() - this.startTime) + "\n\n\n\n\n\n\n");
 
         }

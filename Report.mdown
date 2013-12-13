@@ -1,0 +1,43 @@
+
+# Design choices and reasons
+
+## Choice of Event & Listeners 
+	Having discussed the nature of the CardGame application, in particular the considerable amount of communication that would have to happen between various threads and classes within it, we came to the conclusion that Java's Events and Listeners framework would be the most natural way of providing that communication.
+
+	Being a concept with a direct real-life analogy not only did Events and Listeners framework significantly ease the development process of otherwise complex structures such as threads, but it also provided a more efficient, elegant and therefore less error-prone means of communication between objects. This is opoosed to other techniques such as usage of shared state between threads and objects to communicate with each other, which often is not as efficient, is harder to maintain and thus more error-prone.
+
+
+	From the very begining we decided to have 4 core classes: CardGame, Player, CardDeck and Card.
+## Card class
+	Card class is a simple class that is constructed by passing an integer value into it. It provides simple methods to get the integer value of the card or a whole copy of that instance as well methods that allow a Card instance to compare other instances to itself. Card class was designed in a way that after initialization of its instance, there are no methods to alter its state, which is sometimes a useful measure in the multi-threaded environments.
+## CardDeck class
+	CardDeck class is basically a wrapper class for a an array of cards. It provides several array-manipulation methods like adding and removing cards as well as getter methods to check for deck's size and emptyness. Unlike the Card class, CardDeck class has several methods that alter its state (e.g. pop(), unshift(), push()). As a result, all of the state-altering methods feature the synchronized keyword in their signatrure to ensure thread safety of each CardDeck instance. This guarantees that whenever a CardDeck's state-altering method is called by a particular thread, that thread acquires a lock on that instance and no other thread can call state-altering methods of that particular CardDeck instance in the meantime. Absence of syncronization mechanizm would allow threads to change attributes at the same time which could lead to data inconsistency or even data corruption.
+
+## CardGame and Player classes
+	Both the CardGame and Player class implement their corresponding EventListener interfaces (CardGameListener and PlayerListener). In addition, both classes needed to have runnable methods, but becase Java does not allow implementation of more than one interface, we decided to extend the Thread class in both classes as opposed to implementing the Runnable interface.
+
+
+	
+	Once CardGame's main method is run
+
+	The instantiation of the Player class would happen in the following order:
+	- 
+
+
+	Upon successful inicialization of the CardGame class with appropriate values of 
+
+
+	Cards are immutable.
+
+
+	- The approaches implemented to make the classes thread-safe are coherently discussed.
+	- # well-reasoned and explained The additional player strategy
+# Aproaches taken to ensure thread safety
+
+# Performance issues
+e.g. using Array.sorted() could considerably increase speed in strategy 2 for very large number of players
+
+
+# Detail testing approach taken and testing assesment
+	#TDD
+	The testing approach is appropriate, well- described, and aligns to the production code provided.

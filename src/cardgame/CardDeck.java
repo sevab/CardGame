@@ -1,9 +1,5 @@
 package cardgame;
 
-/**
- *
- * @author sevabaskin
- */
 public class CardDeck {
 
     private Card[] cardsArray;

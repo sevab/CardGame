@@ -1,9 +1,5 @@
 package cardgame;
 
-/**
- *
- * @author xxx
- */
 public class StackUnderflowException extends RuntimeException {
 
     public StackUnderflowException() {
