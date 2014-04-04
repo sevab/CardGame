@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite errors="0" failures="0" hostname="Sevas-MacBook-Air.local" name="cardgame.CardDeckTest" tests="3" time="0.254" timestamp="2014-04-04T21:55:06">
+<testsuite errors="0" failures="0" hostname="Sevas-MacBook-Air.local" name="cardgame.CardDeckTest" tests="3" time="0.107" timestamp="2014-04-04T21:56:22">
   <properties>
     <property name="default.javac.source" value="1.7" />
     <property name="file.encoding.pkg" value="sun.io" />
@@ -77,7 +77,7 @@
     <property name="libs.JAXB-ENDORSED.src" value="" />
     <property name="libs.hibernate-persistence.javadoc" value="" />
     <property name="libs.ejb3-persistence.classpath" value="/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/java/modules/ext/hibernate/hibernate-jpa-2.0-api-1.0.1.Final.jar" />
-    <property name="sun.java.command" value="org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner cardgame.CardDeckTest filtertrace=true haltOnError=false haltOnFailure=false showoutput=true outputtoformatters=true logfailedtests=true logtestlistenerevents=false formatter=org.apache.tools.ant.taskdefs.optional.junit.BriefJUnitResultFormatter formatter=org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter,/Users/sevabaskin/Dropbox/2nd Year/Java/Semester 1/CW2/CardGame/build/test/results/TEST-cardgame.CardDeckTest.xml crashfile=/Users/sevabaskin/Dropbox/2nd Year/Java/Semester 1/CW2/CardGame/build/junitvmwatcher2878393058561233880.properties propsfile=/Users/sevabaskin/Dropbox/2nd Year/Java/Semester 1/CW2/CardGame/build/junit5136711306036357515.properties" />
+    <property name="sun.java.command" value="org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner cardgame.CardDeckTest filtertrace=true haltOnError=false haltOnFailure=false showoutput=true outputtoformatters=true logfailedtests=true logtestlistenerevents=false formatter=org.apache.tools.ant.taskdefs.optional.junit.BriefJUnitResultFormatter formatter=org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter,/Users/sevabaskin/Dropbox/2nd Year/Java/Semester 1/CW2/CardGame/build/test/results/TEST-cardgame.CardDeckTest.xml crashfile=/Users/sevabaskin/Dropbox/2nd Year/Java/Semester 1/CW2/CardGame/build/junitvmwatcher292989054976503471.properties propsfile=/Users/sevabaskin/Dropbox/2nd Year/Java/Semester 1/CW2/CardGame/build/junit7782667156285898488.properties" />
     <property name="built-jar.properties" value="/Users/sevabaskin/Dropbox/2nd Year/Java/Semester 1/CW2/CardGame/build/built-jar.properties" />
     <property name="libs.junit.src" value="" />
     <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16" />
@@ -269,7 +269,7 @@
     <property name="sun.arch.data.model" value="64" />
     <property name="mkdist.disabled" value="false" />
   </properties>
-  <testcase classname="cardgame.CardDeckTest" name="should_pop_cards_and_throw_stack_underflow_exception" time="0.003" />
+  <testcase classname="cardgame.CardDeckTest" name="should_pop_cards_and_throw_stack_underflow_exception" time="0.004" />
   <testcase classname="cardgame.CardDeckTest" name="should_unshift_cards_and_throw_stack_overflow_exception" time="0.0" />
   <testcase classname="cardgame.CardDeckTest" name="should_push_cards_and_throw_stack_overflow_exception" time="0.0" />
   <system-out><![CDATA[]]></system-out>
