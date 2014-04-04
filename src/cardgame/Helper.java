@@ -1,26 +1,26 @@
 package cardgame;
 
 import java.io.BufferedReader;
-// import java.io.BufferedWriter;
 import java.io.File;
-// import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-// import java.nio.channels.FileChannel;
-// import java.util.regex.Matcher;
-// import java.util.regex.Pattern;
+
 import java.io.PrintWriter;
 import java.util.Scanner;
 
-/**
- *
- * @author sevabaskin
- */
 public class Helper {
+    /**
+     * 
+     * 
+     * @param file
+     * @return
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
     static int linesInAFile(File file) throws FileNotFoundException, IOException {
         BufferedReader reader = new BufferedReader(new FileReader(file));
         int lines = 0;
@@ -29,6 +29,13 @@ public class Helper {
         return lines;
     }
 
+    
+    /**
+     * 
+     * 
+     * @param file
+     * @param line 
+     */
     static void appendLineToFile(File file, String line) {
         try {
 			PrintWriter out = new PrintWriter(new FileWriter(file, true));
@@ -40,6 +47,12 @@ public class Helper {
         }
     }
 
+    
+    /**
+     * 
+     * 
+     * @return 
+     */
     static File readFileFromCommandLine() {
         String fileName = null;
         File f = new File("fake/path");
@@ -60,6 +73,16 @@ public class Helper {
     }
 
     // reads file to a CardDeck and validates file values all along
+    /**
+     * 
+     * 
+     * @param f
+     * @param numberOfPlayers
+     * @param handSize
+     * @return
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
     static CardDeck fileToCardDeck(File f, int numberOfPlayers, int handSize) throws FileNotFoundException, IOException {
         Scanner scanner = new Scanner(f);
         int linesInAFile = linesInAFile(f);
@@ -85,8 +108,10 @@ public class Helper {
         return initialDeck;
     }
     
-    /*
+
+    /**
      * Deletes everything from the directory, if not empty
+     * 
      */
     static void createNewDirectory(String dir_name) {
         File dir = new File(dir_name);

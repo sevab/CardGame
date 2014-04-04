@@ -32,13 +32,16 @@ public class Player extends Thread implements PlayerListener {
         this.output_file = new File("game_output/player" + playerIndex + "_output.txt");
     }
 
+    /**
+     * 
+     * 
+     */
     public void run() {
         logAction("Player " + this.playerIndex + " has joined the game");
         logAction("player " + this.playerIndex + " initial hand is " + getHandAsString());
         setPrefferedCard();
         verifyIfWon();
         while (!this.gameOver) {
-            // DRY: verifyIfPaused()?
             if (this.gamePaused) {
                 System.out.println("player " + this.playerIndex + " paused and waiting...");
                 this.cardGame.confirmPlayerState( new PlayerStateEvent(this), "pause" );
@@ -71,7 +74,10 @@ public class Player extends Thread implements PlayerListener {
         firePlayerTerminatedEvent();
     }
 
-
+    /**
+     * 
+     * 
+     */
     void setPrefferedCard(){
         if (this.strategy == 1) {
             this.preferredCard = new Card(this.playerIndex);
@@ -80,6 +86,11 @@ public class Player extends Thread implements PlayerListener {
         }
     }
 
+        /**
+         * 
+         * 
+         * @return 
+         */
     Card discardACard() {
         if (!isFull()) // TODO: move to the run method?
             throw new RuntimeException("Can only discard cards when the hand is full.");
@@ -95,7 +106,10 @@ public class Player extends Thread implements PlayerListener {
         }
         return cardToDiscard;
     }
-
+    /**
+     * 
+     * 
+     */
     void computePreferredCard() {
         if (this.strategy == 2) {
             // recompute preferredCard if the newly drawn card is different from the last preferredCard
@@ -105,6 +119,12 @@ public class Player extends Thread implements PlayerListener {
         }
     }
 
+   
+    /**
+     * 
+     * 
+     * @return 
+     */
     Card mostCommonCard() {
         Card previous = this.cardsArray[0];
         Card mostCommonCard = this.cardsArray[0];
@@ -131,29 +151,63 @@ public class Player extends Thread implements PlayerListener {
     }
 
 
+    /**
+     * 
+     * 
+     */
     void verifyIfWon() {
         if (hasWinningCombo())
             firePlayerWonEvent();
     }
+    
+    /**
+     * 
+     * 
+     * 
+     */
     void firePlayerWonEvent() {
         this.gameOver = true; // don't wait for GameOverEvent, shut down immediately and stop bombarding CardGame with winning events
         this.cardGame.playerWonEventHandler( new PlayerWonEvent(this) );
     }
+    
+    /**
+     * 
+     * 
+     */
     void firePlayerTerminatedEvent() {
         logAction("player " + this.playerIndex + " final hand is " + getHandAsString());
         logAction("player " + this.playerIndex + " exits");
         this.cardGame.confirmPlayerTerminated(new PlayerStateEvent(this));
     }
 
+    
+    /**
+     * 
+     * 
+     * 
+     * @param event 
+     */
     public void gameOverEventHandler(GameOverEvent event) {
         this.gameOver = true;
     }
 
+    
+    /**
+     * 
+     * 
+     * @param event 
+     */
     public void pausePlayerEventHandler(GameStateEvent event) {
         this.gamePaused = true;
         System.out.println("player " + this.playerIndex + " is pausing... ");
     }
 
+    
+    /**
+     * 
+     * 
+     * @param event 
+     */
     public void resumePlayerEventHandler(GameStateEvent event) {
         synchronized (this) {
             this.gamePaused = false;
@@ -161,7 +215,12 @@ public class Player extends Thread implements PlayerListener {
         }
         System.out.println("player " + this.playerIndex + " is resuming... ");
     }
-
+    /**
+     * 
+     * 
+     * @param newCard
+     * @throws StackOverflowException 
+     */
     void push(Card newCard) throws StackOverflowException {
         if (this.top < this.cardsArray.length) {
             this.cardsArray[this.top] = newCard;
@@ -171,10 +230,23 @@ public class Player extends Thread implements PlayerListener {
         }
     }
 
+    
+    /**
+     * 
+     * 
+     * @return 
+     */
     int getPlayerIndex() {
         return this.playerIndex;
     }
 
+    
+    /**
+     * 
+     * 
+     * @param index
+     * @return 
+     */
     Card delete_at(int index) {
         if (this.isEmpty())
             throw new StackUnderflowException("Player's hands are empty. Nothing to delete.");
@@ -193,6 +265,12 @@ public class Player extends Thread implements PlayerListener {
         return cardToDelete;
     }
 
+    
+        /**
+         * 
+         * 
+         * @return 
+         */
     boolean hasWinningCombo() {
         if (this.top != this.cardsArray.length-1 ) // only full-1 hands are accepted
             return false;
@@ -220,6 +298,11 @@ public class Player extends Thread implements PlayerListener {
             throw new StackUnderflowException();
         return this.cardsArray[this.top - 1].getCopy();
     }
+    /**
+     * 
+     * 
+     * @return 
+     */
     String getHandAsString() {
         // System.out.println(Thread.currentThread().getName() + " a.k.a. player " + this.playerIndex + " does the hand method");    
         if (this.isEmpty())
@@ -232,7 +315,11 @@ public class Player extends Thread implements PlayerListener {
         }
         return hand;
     }
-    // no need to declare IOExceptio if we are catching it. In fact, dry out it here, instead of doing it above.
+    /**
+     * 
+     * 
+     * @param action 
+     */
     private void logAction(String action) {
         System.out.println(action);
         Helper.appendLineToFile( output_file, action);

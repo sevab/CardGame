@@ -12,7 +12,14 @@ public class CardDeck {
          this.top = 0;
     }
     
-    // storing the copy of newCard, since the object may be collected later on by garbage collector
+
+   /**
+    * 
+    * adds newCard to the end of the cardsArray
+    * 
+    * @param newCard
+    * @throws StackOverflowException if the deck is full
+    */
     void push(Card newCard) throws StackOverflowException {
         if (this.top < this.cardsArray.length) {
             this.cardsArray[this.top] = newCard.getCopy();
@@ -22,6 +29,13 @@ public class CardDeck {
         }
     }
 
+    /**
+     * 
+     * Deletes and returns the last card from the cardsArray
+     * 
+     * @return the last card from the cardsArray
+     * @throws StackUnderflowException if the deck is empty
+     */
     synchronized Card pop() throws StackUnderflowException {
         if (this.isEmpty()) {
             throw new StackUnderflowException("Card deck is empty. Cannot draw cards from the deck.");
@@ -32,7 +46,13 @@ public class CardDeck {
         return temp;
     }
 	
-	// TODO: maybe will need to add newCard.getCopy() due to concurrency & immutability issues
+
+    /**
+     * adds newCard to the beginning of the cardsArray shifting existing cards by one
+     * 
+     * @param newCard
+     * @throws StackOverflowException if the deck is full
+     */
     synchronized void unshift(Card newCard) throws StackOverflowException {
     	if (this.top < this.cardsArray.length) {
     		for (int i = this.top-1; 0 <= i; i--)
@@ -43,6 +63,10 @@ public class CardDeck {
             throw new StackOverflowException("Card deck is full. You cannot add more cards.");
         }
     }
+    /**
+     * 
+     * @return the number of elements currently stored in the cardsArray
+     */
     int getSize() {
         return this.top;
     }
@@ -50,15 +74,28 @@ public class CardDeck {
     boolean isEmpty() {
         return (this.top == 0);
     }
+    /**
+     * 
+     * @return the index name of the current deck
+     */
     int getDeckIndex() {
         return this.deckIndex;
     }
+    /**
+     * 
+     * @return the copy of the last card in the cardsArray
+     * @throws StackUnderflowException  if empty
+     */
     Card top() throws StackUnderflowException {
         if (this.isEmpty())
             throw new StackUnderflowException();
         return this.cardsArray[this.top - 1].getCopy();
     }
-    // test
+
+    /**
+     * 
+     * @return the contents of the cardsArray as a string
+     */
     public String toString() {
         String result = "";
         if (this.isEmpty()) return "none";

@@ -6,8 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Map;
-import java.util.Scanner;
+
 
 public class CardGame extends Thread implements CardGameListener {
 
@@ -25,7 +24,6 @@ public class CardGame extends Thread implements CardGameListener {
     private volatile boolean inIntermediateState;
     private volatile boolean gamePaused = false;
     private int strategy;
-    long startTime;
 
 
 
@@ -35,7 +33,6 @@ public class CardGame extends Thread implements CardGameListener {
         this.handSize = handSize;
         this.players = new Player[numberOfPlayers];
         this.cardDecks = new CardDeck[numberOfPlayers];
-        // remove and make static and final? what are final's implications?
         this.userInputRunnable = new UserInputThread();
         this.userInputThread = new Thread(this.userInputRunnable);
         this.playersConfirmed = 0;
@@ -45,9 +42,8 @@ public class CardGame extends Thread implements CardGameListener {
     }
 
 	public void run() {
-        this.startTime = System.nanoTime();
         for (int i=0; i < this.numberOfPlayers; i++) {
-        	// each deck should be able to hold at least 4 times the number of cards
+        	// testing has shown each deck should be able to hold at least his.handSize*this.numberOfPlayers times the number of cards
         	cardDecks[i] = new CardDeck(i+1, this.handSize*this.numberOfPlayers);
         }
         for (int i=0; i < this.numberOfPlayers; i++) {
@@ -71,6 +67,14 @@ public class CardGame extends Thread implements CardGameListener {
     	for (Player player : this.players)
     		player.start();
     }
+    /**
+     * 
+     * receives first PlayerWonEvent and notifies the rest of players to terminate
+     * as well as terminates userInputThread
+     * subsequent PlayerWonEvents are ignored
+     * 
+     * @param event takes an event from a winning candidate
+     */
     public synchronized void playerWonEventHandler(PlayerWonEvent event) {
 		if (!this.gameOver) {
 			Object winningPlayer = event.getSource();
@@ -92,7 +96,11 @@ public class CardGame extends Thread implements CardGameListener {
 		}
     }
 
-    // combine pauseGame + resumeGame into one
+    /**
+     * 
+     * notifies players to pause when user inputs p+Enter
+     * 
+     */
     void pauseGame() {
         if (!this.gamePaused) {
             System.out.println("Pausing game...");
@@ -103,6 +111,11 @@ public class CardGame extends Thread implements CardGameListener {
             notifyUserInputThread();
         }
     }
+    /**
+     * 
+     * notifies players to resume when r+Enter input is detected by userInputThread
+     * 
+     */
     void resumeGame() {
         if (gamePaused) {
             System.out.println("Resuming game...");
@@ -115,7 +128,14 @@ public class CardGame extends Thread implements CardGameListener {
     }
 
 
-    // syncrhonizing incrementation of playersConfirmed
+    /**
+     * 
+     * receives confirmation from players regarding their pause/resume state
+     * and resumes userInputThread from intermediate thread once players have paused/resumed
+     * 
+     * @param event
+     * @param state 
+     */
     public synchronized void confirmPlayerState( PlayerStateEvent event, String state ) {
         // verify String state corresponds to the current this.gamePaused state?
         this.playersConfirmed++;
@@ -134,7 +154,13 @@ public class CardGame extends Thread implements CardGameListener {
         }
     }
 
-    // test
+    /**
+     * 
+     * recieves  PlayerStateEvent from a player when a player terminates
+     * writes down deck states
+     * 
+     * @param event 
+     */
     synchronized void confirmPlayerTerminated(PlayerStateEvent event) {
         this.playersTerminated++;
         if (this.playersTerminated == this.numberOfPlayers) {
@@ -146,18 +172,27 @@ public class CardGame extends Thread implements CardGameListener {
                 Helper.appendLineToFile( output_file, deck_state );
             }
             System.out.println("Game Over!");
-            // DELETE
-            System.out.println("\n\n\n\n\n\n\n"+ (System.nanoTime() - this.startTime) + "\n\n\n\n\n\n\n");
-
         }
     }
 
+    /**
+     * 
+     * 
+     * 
+     * 
+     */
     void notifyUserInputThread() {
         this.inIntermediateState = false;
         synchronized(this.userInputThread) {
             this.userInputThread.notify();
         }
     }
+    
+    /**
+     * 
+     * 
+     * 
+     */
     public void startInputThread() {
         this.userInputThread.start();
     }
@@ -165,6 +200,12 @@ public class CardGame extends Thread implements CardGameListener {
     boolean isOver() {
         return this.gameOver;
     }
+    
+    /**
+     * 
+     * 
+     * @return 
+     */
     Player getWinner() {
         if (isOver())
             return this.winner;
@@ -175,13 +216,18 @@ public class CardGame extends Thread implements CardGameListener {
         this.strategy = strategy;
     }
 
-    // TODO: remove unfixed exceptions
+    /**
+     * 
+     * 
+     * @param args
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
 	public static void main(String[] args) throws FileNotFoundException, IOException {
         if (args.length < 2) {
             System.err.println("\n Usage Error: CardGame number_of_players number_of_cards_per_player\n");
             System.exit(1);
         }
-        // initialize to something, otherwise compiler complains
         int numberOfPlayers = -1;
         int handSize = -1;
         try {
@@ -225,11 +271,9 @@ public class CardGame extends Thread implements CardGameListener {
         Helper.createNewDirectory("game_output");
         System.out.println("Starting the game...");
         System.out.println("\n\nWhile the game is running press p+Enter to pause the game or r+Enter to resume.\nThis message will disappear in less than 1 sec.\n\n");
-        // try { Thread.sleep(1000); } catch (InterruptedException e) {}
+         try { Thread.sleep(1000); } catch (InterruptedException e) {}
         CardGame game = new CardGame(numberOfPlayers, handSize, initialDeck);
-        game.setStrategy(strategy);
-        // ask and validate strategy number
-        
+        game.setStrategy(strategy);        
 
         game.start();
         game.startInputThread();
@@ -237,18 +281,27 @@ public class CardGame extends Thread implements CardGameListener {
 
 
 
-
+        /**
+         * 
+         * 
+         * 
+         */
     private class UserInputThread implements Runnable {
 
+        /**
+         * 
+         * 
+         * 
+         */
         public void run() {
             BufferedReader br;
             String userInput = null;
 
             while(true) {
                 if (inIntermediateState) {
-                    synchronized(userInputThread) { // `this` doesn't work for some reason
+                    synchronized(userInputThread) {
                         try {
-                            userInputThread.wait(); // a bit ugly (or not?), consider using a dedicated monitor obj
+                            userInputThread.wait();
                         } catch (InterruptedException ex) {}
                     }
                 }
@@ -264,13 +317,12 @@ public class CardGame extends Thread implements CardGameListener {
                     } catch (InterruptedException e) {
                         return;
                     }
-                    // synchronized()? what if a player is reporting something meanwhile? There's nothing for him to report (except wining or exiting)
                     switch ( userInput ) {
                         case "p" :  inIntermediateState = true;
                                     pauseGame(); break;
                         case "r" :  inIntermediateState = true;
                                     resumeGame(); break;
-                        default  : System.out.println("Incorrect choice. Try again."); // print full instructions
+                        default  : System.out.println("Incorrect choice. Try again.");
                     }
 
                 } catch (IOException e) {
